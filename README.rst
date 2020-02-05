@@ -1,8 +1,8 @@
 This is is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
-:Overview: TODO 
-:Input: TODO
-:Output: TODO
+:Overview: This is a simple pipeline to map several FastQ files onto a reference using different mappers/aligners
+:Input: A set of FastQ files.
+:Output: A set of BAM files
 :Status: draft
 :Citation: Cokelaer et al, (2017), ‘Sequana’: a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI doi:10.21105/joss.00352
 

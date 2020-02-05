@@ -88,7 +88,7 @@ onsuccess:
     sc = OnSuccessCleaner()
     sc.files_to_remove.append("mapper.rules")
     #toremove = config["onsuccess"]["toclean"]
-    sc.files_to_remove.append(["schema.yaml", "info.txt", "env.yml", "multi_config.yaml"])
+    sc.files_to_remove.extend(["schema.yaml", "info.txt", "env.yml", "multi_config.yaml"])
     sc.add_makefile()
     print("Once done, please clean up the directory using\n'make clean'")
 
