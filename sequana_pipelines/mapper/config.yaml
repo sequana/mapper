@@ -34,7 +34,7 @@ bwa_mem_mapping:
 ## - config_file: by default, we use sequana RNA-seq multiqc_config file. 
 ##       If you want your own multiqc, fill this entry
 multiqc:
-    options: "-f "
+    options: "-f -m sequana_bamtools_stats"
     output_directory: multiqc
     config_file: multiqc_config.yaml
 
