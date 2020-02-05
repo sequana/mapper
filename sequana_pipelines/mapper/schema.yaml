@@ -1,0 +1,52 @@
+# Schema validator for the quality_control
+# author: Thomas Cokelaer
+
+type: map
+mapping:
+    "input_directory":
+        type: str
+        required: False
+    "input_readtag":
+        type: str
+        required: False
+    "input_pattern":
+        type: str
+        required: False
+
+    "general":
+        type: map
+        mapping:
+            "mapper":
+                type: str
+                enum: [bwa]
+            "reference_file":
+                type: str
+
+    "bwa_mem_mapping":
+        type: map
+        mapping:
+            "index_algorithm":
+                type: str 
+            "options":
+                type: str 
+            "threads":
+                type: int 
+            "tmp_directory":
+                type: str 
+
+    "multiqc":
+        type: map
+        mapping:
+            "options":
+                type: str
+            "output_directory":
+                type: str
+            "config_file":
+                type: str
+
+
+
+
+
+
+

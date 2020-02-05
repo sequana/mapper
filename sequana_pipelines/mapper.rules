@@ -1,0 +1,77 @@
+"""mapper pipeline
+
+Author: Thomas Cokelaer
+Affiliation: Institut Pasteur @ 2019
+
+This pipeline is part of Sequana software (sequana.readthedocs.io)
+
+snakemake -s mapper.rules --forceall --stats stats.txt --cores 4
+
+
+"""
+import sequana
+from sequana import snaketools as sm
+from sequana import sequana_data
+
+# This must be defined before the include
+configfile: "config.yaml"
+
+from sequana import SequanaConfig
+cfg = SequanaConfig("config.yaml")
+cfg.check_wonfig_with_schema("schema.yaml")
+
+# A convenient manager
+manager = sm.PipelineManager("mapper", config)
+
+__data__input = manager.getrawdata()
+
+
+
+rule pipeline:
+    input: "multiqc/multiqc_report.html"
+
+
+if config.mapper.tool == "bwa":
+    __bwa_index_mapping__log = "common_logs/bwa_index.log"
+    __bwa_mem_mapping__fastq = __data__input
+    __bwa_mem_mapping__bam = manager.getname("bwa_mem_mapping", ".sorted.bam")
+    __bwa_mem_mapping__fai = __bwa_mem_mapping__reference + ".fai"
+    __bwa_mem_mapping__log = manager.getlogdir("bwa_mem_phix")
+    include: bwa_mem_dynamic("mapping", manager)
+
+__multiqc__input = expand(__bwa_mem_mapping__bam, sample=manager.samples)
+
+rule multiqc:
+    input: __multiqc__input
+    output: __multiqc__output
+    params:
+        inputdir = config['multiqc']['indir'],
+        outdir="multiqc",
+        config=sequana_data("multiqc_config.yaml", "../multiqc"),
+        options = config["multiqc"]["options"] 
+    shell:
+        """
+        multiqc {params.inputdir} -o {params.outdir} -c {params.config} {params.options} 2> multiqc/multiqc.log
+        """
+
+# Those rules takes a couple of seconds so no need for a cluster
+localrules: multiqc
+
+
+onsuccess:
+    print("Please open the report index.html or {}".format(__multiqc__output))
+    #shell("ln -f -s {} index.html".format(__multiqc__output))
+    #shell("rm -f ./samples/*/*.done")
+    #shell("rm -f ./samples/*/*.log")
+    #shell("chmod -R g+w .")
+
+    from sequana.snaketools import OnSuccessCleaner
+    sc = OnSuccessCleaner()
+    sc.files_to_remove.append("mapper.rules")
+    toremove = config["onsuccess"]["toclean"]
+    sc.files_to_remove.append(toremove)
+    sc.add_makefile()
+    print("Once done, please clean up the directory using\n'make clean'")
+
+onerror:
+    print("An error occurred. See message above.")

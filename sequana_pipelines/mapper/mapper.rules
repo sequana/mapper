@@ -1,0 +1,97 @@
+"""mapper pipeline
+
+Author: Thomas Cokelaer
+Affiliation: Institut Pasteur @ 2019
+
+This pipeline is part of Sequana software (sequana.readthedocs.io)
+
+snakemake -s mapper.rules --forceall --stats stats.txt --cores 4
+
+
+"""
+import sequana
+from sequana import snaketools as sm
+from sequana import sequana_data
+
+# This must be defined before the include
+configfile: "config.yaml"
+
+exec(open(sequana.modules["bwa_mem_dynamic"], "r").read())
+
+# A convenient manager
+manager = sm.PipelineManager("mapper", config)
+
+__data__input = manager.getrawdata()
+__pipeline_name__ = "mapper"
+rule pipeline:
+    input: "multiqc/multiqc_report.html"
+
+
+if config['general']['mapper'] == "bwa":
+    reference = config["general"]["reference_file"]
+    """if not os.path.isfile(reference + ".bwt"):
+        exec(open(sequana.modules["dynamic_copy"], "r").read())
+        __copy_ref__input = reference
+        __copy_ref__output = "reference/" + os.path.basename(reference)
+        include: dynamic_copy("ref", manager)
+        __bwa_mem_mapping__reference = __copy_ref__output
+    else:
+        __bwa_mem_mapping__reference = reference
+    """
+
+    __bwa_index_mapping__log = "common_logs/bwa_index.log"
+    __bwa_mem_mapping__fastq = __data__input
+    __bwa_mem_mapping__reference = config['general']['reference_file']
+    __bwa_mem_mapping__bam = manager.getname("bwa_mem_mapping", ".sorted.bam")
+    __bwa_mem_mapping__fai = __bwa_mem_mapping__reference + ".bwt"
+    __bwa_mem_mapping__log = manager.getlogdir("bwa_mem_mapping")
+    include: bwa_mem_dynamic("mapping", manager)
+
+
+__bamtools_stats__output__ = "{sample}/bamtools_stats/sequana_bamtools_stats.txt"
+rule bamtools_stats:
+    input: __bwa_mem_mapping__bam
+    output: __bamtools_stats__output__
+    shell:
+        "bamtools stats -in {input} > {output}"
+
+
+
+__multiqc__input = expand(__bamtools_stats__output__, sample=manager.samples)
+
+
+__multiqc__input_dir = "."
+__multiqc__logs = "multiqc/multiqc.log"
+__multiqc__output = config['multiqc']['output_directory'] + "/multiqc_report.html"
+
+rule multiqc:
+    input: __multiqc__input
+    output: __multiqc__output
+    params:
+        inputdir = ".",
+        outdir="multiqc",
+        config=sequana_data("multiqc_config.yaml", "../multiqc"),
+        options = config["multiqc"]["options"] 
+    shell:
+        """
+        multiqc {params.inputdir} -o {params.outdir} -c {params.config} {params.options} 2> multiqc/multiqc.log
+        """
+
+# Those rules takes a couple of seconds so no need for a cluster
+localrules: multiqc
+
+
+onsuccess:
+    print("Please open the report index.html or {}".format(__multiqc__output))
+
+    from sequana.snaketools import OnSuccessCleaner
+    sc = OnSuccessCleaner()
+    sc.files_to_remove.append("mapper.rules")
+    #toremove = config["onsuccess"]["toclean"]
+    sc.files_to_remove.append(["schema.yaml", "info.txt", "env.yml", "multi_config.yaml"])
+    sc.add_makefile()
+    print("Once done, please clean up the directory using\n'make clean'")
+
+onerror:
+    print("An error occurred. See message above.")
+
