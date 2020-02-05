@@ -45,7 +45,9 @@ Requirements
 
 This pipelines requires the following executable(s):
 
-- TODO
+- bamtools
+- bwa
+- multiqc
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/dag.png
 
