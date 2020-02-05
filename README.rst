@@ -65,3 +65,14 @@ Rules and configuration details
 Here is the `latest documented configuration file <https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/config.yaml>`_
 to be used with the pipeline. Each rule used in the pipeline may have a section in the configuration file. 
 
+
+Changelog
+~~~~~~~~~
+
+========= ====================================================================
+Version   Description
+========= ====================================================================
+0.8.1     * fix bamtools stats rule to have different output name for multiqc
+0.8.0     **First release.**
+========= ====================================================================
+

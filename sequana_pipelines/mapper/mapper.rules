@@ -48,7 +48,7 @@ if config['general']['mapper'] == "bwa":
     include: bwa_mem_dynamic("mapping", manager)
 
 
-__bamtools_stats__output__ = "{sample}/bamtools_stats/sequana_bamtools_stats.txt"
+__bamtools_stats__output__ = "{sample}/bamtools_stats/{sample}_sequana_bamtools_stats.txt"
 rule bamtools_stats:
     input: __bwa_mem_mapping__bam
     output: __bamtools_stats__output__
