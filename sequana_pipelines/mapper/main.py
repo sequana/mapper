@@ -54,7 +54,7 @@ class Options(argparse.ArgumentParser):
 
         pipeline_group = self.add_argument_group("pipeline")
         pipeline_group.add_argument("--mapper", default='bwa', 
-             choices=['bwa'])
+             choices=['bwa', 'minimap2'])
         pipeline_group.add_argument("--reference-file", required=True, 
              )
 
@@ -78,7 +78,6 @@ def main(args=None):
     cfg.input_directory = os.path.abspath(options.input_directory)
     cfg.input_pattern = options.input_pattern
     cfg.input_readtag = options.input_readtag
-
 
     cfg.general.mapper = options.mapper
     cfg.general.reference_file = os.path.abspath(options.reference_file)

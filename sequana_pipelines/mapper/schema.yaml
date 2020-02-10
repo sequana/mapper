@@ -18,7 +18,7 @@ mapping:
         mapping:
             "mapper":
                 type: str
-                enum: [bwa]
+                enum: [bwa, minimap2]
             "reference_file":
                 type: str
 

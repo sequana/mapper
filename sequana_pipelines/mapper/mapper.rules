@@ -38,7 +38,6 @@ if config['general']['mapper'] == "bwa":
     else:
         __bwa_mem_mapping__reference = reference
     """
-
     __bwa_index_mapping__log = "common_logs/bwa_index.log"
     __bwa_mem_mapping__fastq = __data__input
     __bwa_mem_mapping__reference = config['general']['reference_file']
@@ -47,17 +46,31 @@ if config['general']['mapper'] == "bwa":
     __bwa_mem_mapping__log = manager.getlogdir("bwa_mem_mapping")
     include: bwa_mem_dynamic("mapping", manager)
 
+    __bamtools_stats__input = __bwa_mem_mapping__bam
+elif config['general']['mapper'] == "minimap2":
+    __minimap2__output = manager.getname("minimap2", ".sorted.bam")
+    rule minimap2:
+        input: __data__input
+        output: __minimap2__output
+        params:
+            reference=config['general']['reference_file']
+        shell:
+            """
+            minimap2 {params.reference} {input} -a | samtools view -b | bamtools sort -in - -out {output}
+            """
+    __bamtools_stats__input = __minimap2__output
+
 
 # sample should be included at the end of the filename for the multiqc to work
-__bamtools_stats__output__ = "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
+__bamtools_stats__output = "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
 rule bamtools_stats:
-    input: __bwa_mem_mapping__bam
-    output: __bamtools_stats__output__
+    input: __bamtools_stats__input
+    output: __bamtools_stats__output
     shell:
         "bamtools stats -in {input} > {output}"
 
 
-__multiqc__input = expand(__bamtools_stats__output__, sample=manager.samples)
+__multiqc__input = expand(__bamtools_stats__output, sample=manager.samples)
 
 __multiqc__input_dir = "."
 __multiqc__logs = "multiqc/multiqc.log"

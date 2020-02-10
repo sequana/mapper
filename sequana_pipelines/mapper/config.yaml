@@ -17,10 +17,12 @@ general:
 
 bwa_mem_mapping:
     index_algorithm: is
-    options: -T 30
+    options: -T 30 -M
     threads: 4
     tmp_directory: ./tmp
 
+minimap2:
+    options: 
 
 
 #############################################################################
