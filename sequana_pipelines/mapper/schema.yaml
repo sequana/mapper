@@ -5,13 +5,16 @@ type: map
 mapping:
     "input_directory":
         type: str
-        required: False
+        required: True
     "input_readtag":
         type: str
         required: False
     "input_pattern":
         type: str
-        required: False
+        required: True
+    "paired_data":
+        type: bool
+        required: True
 
     "general":
         type: map
@@ -20,6 +23,8 @@ mapping:
                 type: str
                 enum: [bwa, minimap2]
             "reference_file":
+                type: str
+            "annotation_file":
                 type: str
 
     "bwa_mem_mapping":
@@ -39,14 +44,64 @@ mapping:
         mapping:
             "options":
                 type: str
-            "output_directory":
+            "outdir":
                 type: str
             "config_file":
                 type: str
 
+    "minimap2": 
+        type: map
+        mapping:
+            "options":
+                type: str
 
-
-
-
-
+    "sequana_coverage":
+        type: map
+        mapping:
+            "do":
+                type: bool
+                default: False
+                required: True
+            "circular":
+                type: bool
+                default: True
+                required: True
+            "double_threshold":
+                type: float
+                range: { min: 0, max: 1}
+                required: False
+                default: 0.5
+            "genbank_file":
+                type: str
+                required: False
+            "high_threshold":
+                type: float
+                range: { min: 2 }
+            "low_threshold":
+                type: float
+                range: { max: -2 }
+            "mixture_models":
+                type: int
+                required: True
+                range: { min: 1, max: 3 }
+            "reference_file":
+                type: str
+                required: False
+            "chunksize":
+                type: int
+                required: False
+                default: 5000000
+            "window_size":
+                default: 20001
+                type: int
+                range: { min: 3 }
+            "binning":
+                type: int
+                range: { min: -1 }
+            "cnv_clustering":
+                type: int
+                range: { min: -1 }
+            "gc_window_size":
+                type: int
+                range: { min: 2}
 

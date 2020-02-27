@@ -78,9 +78,30 @@ def main(args=None):
     cfg.input_directory = os.path.abspath(options.input_directory)
     cfg.input_pattern = options.input_pattern
     cfg.input_readtag = options.input_readtag
+    cfg.paired_data = options.paired_data
 
     cfg.general.mapper = options.mapper
     cfg.general.reference_file = os.path.abspath(options.reference_file)
+
+    manager.exists(cfg.general.reference_file)
+
+
+    # checks read tag
+    import glob
+    filenames = glob.glob(cfg.input_directory+os.sep + cfg.input_pattern)
+    if len(filenames) == 0:
+        raise ValueError("Could not find any files with your pattern {} in {}".format(cfg.input_pattern, cfg.input_directory))
+
+    if cfg.input_readtag:
+        from sequana import FastQFactory
+        try:
+            ff = FastQFactory(cfg.input_directory + os.sep + cfg.input_pattern, read_tag=cfg.input_readtag)
+        except:
+            logger.warning("""Check the read tag and input patter/directory. You may
+proceed but maybe the read tag is incorrect. It may be ignored when runing the
+pipeline""")
+
+
 
     # finalise the command and save it; copy the snakemake. update the config
     # file and save it.

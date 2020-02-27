@@ -19,12 +19,19 @@ configfile: "config.yaml"
 exec(open(sequana.modules["bwa_mem_dynamic"], "r").read())
 
 # A convenient manager
-manager = sm.PipelineManager("mapper", config)
+#
+#
+try:
+    manager = sm.PipelineManager("mapper", config)
+except:
+    manager = sm.PipelineManager("mapper", config, fastq=False)
 
 __data__input = manager.getrawdata()
 __pipeline_name__ = "mapper"
-rule pipeline:
-    input: "multiqc/multiqc_report.html"
+
+
+reference_file = config['general']['reference_file']
+annotation_file = config['general']['annotation_file']
 
 
 if config['general']['mapper'] == "bwa":
@@ -40,7 +47,7 @@ if config['general']['mapper'] == "bwa":
     """
     __bwa_index_mapping__log = "common_logs/bwa_index.log"
     __bwa_mem_mapping__fastq = __data__input
-    __bwa_mem_mapping__reference = config['general']['reference_file']
+    __bwa_mem_mapping__reference = reference_file
     __bwa_mem_mapping__bam = manager.getname("bwa_mem_mapping", ".sorted.bam")
     __bwa_mem_mapping__fai = __bwa_mem_mapping__reference + ".bwt"
     __bwa_mem_mapping__log = manager.getlogdir("bwa_mem_mapping")
@@ -70,6 +77,34 @@ rule bamtools_stats:
         "bamtools stats -in {input} > {output}"
 
 
+
+
+# Sequana_coverage analysis
+if config["sequana_coverage"]["do"]:
+    __samtools_depth__input = __bamtools_stats__output
+    __samtools_depth__output = manager.getname("samtools_depth", ".bed")
+    __samtools_depth__log = manager.getlogdir("samtools_depth")
+    include: sm.modules["samtools_depth"]
+
+    __sequana_coverage__bed = __samtools_depth__output
+    __sequana_coverage__fasta = reference_file
+    if config['sequena_coverage']['genbank']:
+        __sequana_coverage__gbk = annotation_file
+    else:
+        __sequana_coverage__gbk = []
+    config["sequana_coverage"]['k'] = config['sequana_coverage']['mixture_models']
+    __sequana_coverage__csv = manager.getname("sequana_coverage", ".csv")
+    __sequana_coverage__report_dir = __report_dir__
+    __sequana_coverage__html = os.sep.join([
+        __report_dir__, 'sequana_coverage.html'
+    ])
+    include: sm.modules["sequana_coverage"]
+    expected_output.append(expand(__sequana_coverage__csv,
+                                  sample=manager.samples))
+
+
+
+
 __multiqc__input = expand(__bamtools_stats__output, sample=manager.samples)
 
 __multiqc__input_dir = "."
@@ -93,12 +128,15 @@ rule multiqc:
 localrules: multiqc
 
 
+rule pipeline:
+    input: expected_output + ["multiqc/multiqc_report.html"]
+
 onsuccess:
     from sequana.snaketools import OnSuccessCleaner
     sc = OnSuccessCleaner()
     sc.files_to_remove.append("mapper.rules")
     #toremove = config["onsuccess"]["toclean"]
-    sc.files_to_remove.extend(["schema.yaml", "info.txt", "env.yml", "multi_config.yaml"])
+    sc.files_to_remove.extend(["schema.yaml", "mapper.sh", "multi_config.yaml"])
     sc.add_makefile()
     print("Once done, please clean up the directory using\n'make clean'")
 

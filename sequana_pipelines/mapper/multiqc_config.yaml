@@ -20,20 +20,16 @@
 #-------------------------------------------------------------------------------
 
 # Title to use for the report.
-title: "Project Name"
-subtitle: "Titre de l'analyse"           # Grey text below title
+title: "BXXX"
+subtitle: "Mapping"         
 intro_text: "MultiQC reports summarise analysis results produced with RNA-seq sequana pipeline "          # Set your own text
 
 # Add generic information to the top of reports
 report_header_info:
-#- Example Config:: 'This is arbitrary'
-#- Another field:: 'Loaded from <code>multiqc_config_example.yaml</code>'
-    - Contact E-mail: '<login>@example.com'
-    - Application Type: 'Stranded RNA-seq'
-    - Project Type: 'Differential gene expression'
-    - Sequencing Platform: 'HiSeq 2500 High Output V4'
-    - Sequencing Setup: 'SR65'
-    - Library type : 'Illumina TruSeq'
+    - Authors: '<a href="http://github.com/sequana/sequana">Sequana developers</a>'
+    - Want to know more?: 'See the <a href="http://sequana.readthedocs.io" target="_blank">Sequana</a> and  <a href="http://github.com/sequana/sequana_rnaseq/" target="_blank"> sequana_mapper pipeline</a> documentation.'
+    - Citations: 'If you used Sequanix, Sequana, Sequana_coverage tool, or any Sequana pipelines, please see <a href="http://sequana.readthedocs.io">How to cite ?</a> section. In particular, if you use th    is report in a publication, please cite Sequana.'
+    - Contact E-mail: ''
 
 #-------------------------------------------------------------------------------
 
