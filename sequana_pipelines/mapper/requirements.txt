@@ -1,9 +1,5 @@
 - bwa
+- minimap2
 - sambamba
 - samtools
-- kraken
-- ktImportText
-- fastqc
-- pigz
-- cutadapt
-- atropos
+- sequana_coverage
