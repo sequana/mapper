@@ -48,6 +48,8 @@ This pipelines requires the following executable(s):
 - bamtools
 - bwa
 - multiqc
+- sequana_coverage
+- minimap2
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/dag.png
 
@@ -72,6 +74,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.8.4     * Fixing multiqc (synchronized with sequana updates) 
 0.8.3     * add sequana_coverage rule. 
 0.8.2     * add minimap2 mapper 
 0.8.1     * fix bamtools stats rule to have different output name for multiqc
