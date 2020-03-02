@@ -62,10 +62,11 @@ elif config['general']['mapper'] == "minimap2":
         input: __data__input
         output: __minimap2__output
         params:
-            reference=config['general']['reference_file']
+            reference=config['general']['reference_file'],
+            options=config['minimap2']['options']
         shell:
             """
-            minimap2 {params.reference} {input} -a | samtools view -b | bamtools sort -in - -out {output}
+            minimap2 {params.reference} {input} {params.options} -a | samtools view -b | bamtools sort -in - -out {output}
             """
     __bamtools_stats__input = __minimap2__output
 
