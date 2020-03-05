@@ -74,6 +74,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.8.5     * create a sym link to the HTML report. Better post cleaning.
 0.8.4     * Fixing multiqc (synchronized with sequana updates) 
 0.8.3     * add sequana_coverage rule. 
 0.8.2     * add minimap2 mapper 
