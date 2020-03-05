@@ -134,27 +134,14 @@ localrules: multiqc
 
 
 onsuccess:
+    shell("ln -f -s {} index.html".format(__multiqc__output))
+    shell("chmod -R g+w .")
+
     from sequana.snaketools import OnSuccessCleaner
-    sc = OnSuccessCleaner()
-    sc.files_to_remove.append("mapper.rules")
-    toremove =  " slurm*out mapper.sh mapper.rules config.yaml "
-    toremove += " stats.txt schema.yaml multiqc_config.yaml "
-    sc.files_to_remove.extend(toremove)
+    sc = OnSuccessCleaner("mapper")
     sc.add_makefile()
-    print("Once done, please clean up the directory using\n'make clean'")
 
-    with open(__multiqc__output, "r") as fin:
-        with open(__multiqc__output+"2", "w") as fout:
-            line = fin.readline()
-            while line:
-                if """<a href="http://multiqc.info" target="_blank">""" in line:
-                    line = fin.readline() # read the image
-                    line = fin.readline() # read the ending </a> tag
-                else:
-                    fout.write(line)
-                line = fin.readline() # read the next line
-    shell("mv {} {}".format(__multiqc__output +"2", __multiqc__output))
-
+    sm.clean_multiqc(__multiqc__output)
 
 
 onerror:
