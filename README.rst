@@ -75,6 +75,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.8.7     * fix config file creation (for bigwig)
 0.8.6     * added bowtie2 mapper + bigwig as output, make coverage optional
 0.8.5     * create a sym link to the HTML report. Better post cleaning.
 0.8.4     * Fixing multiqc (synchronized with sequana updates) 

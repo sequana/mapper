@@ -154,7 +154,7 @@ rule multiqc:
         inputdir = ".",
         outdir="multiqc",
         config=sequana_data("multiqc_config.yaml", "../multiqc"),
-        options = config["multiqc"]["options"] 
+        options = config["multiqc"]["options"]
     shell:
         """
         multiqc {params.inputdir} -o {params.outdir} -c {params.config} {params.options} 2> multiqc/multiqc.log
