@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 # License: 3-clause BSD
-__revision__ = "$Id: $" # for the SVN Id
 from setuptools import setup, find_namespace_packages
 
 _MAJOR               = 0
 _MINOR               = 8
-_MICRO               = 4
+_MICRO               = 5
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
 
