@@ -2,8 +2,8 @@ This is is the **mapper** pipeline from the `Sequana <https://sequana.readthedoc
 
 :Overview: This is a simple pipeline to map several FastQ files onto a reference using different mappers/aligners
 :Input: A set of FastQ files.
-:Output: A set of BAM files
-:Status: draft
+:Output: A set of BAM files (and/or bigwig)
+:Status: Production
 :Citation: Cokelaer et al, (2017), ‘Sequana’: a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI doi:10.21105/joss.00352
 
 
@@ -50,6 +50,7 @@ This pipelines requires the following executable(s):
 - multiqc
 - sequana_coverage
 - minimap2
+- bowtie2
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/dag.png
 

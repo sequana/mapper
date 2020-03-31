@@ -2,4 +2,5 @@
 - minimap2
 - sambamba
 - samtools
-- sequana_coverage
+- bowtie2
+- bioconvert
