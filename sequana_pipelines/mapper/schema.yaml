@@ -21,11 +21,13 @@ mapping:
         mapping:
             "mapper":
                 type: str
-                enum: [bwa, minimap2]
+                enum: [bwa, minimap2, bowtie2]
             "reference_file":
                 type: str
             "annotation_file":
                 type: str
+            "output_bigwig":
+                type: bool
 
     "bwa_mem_mapping":
         type: map
@@ -104,4 +106,15 @@ mapping:
             "gc_window_size":
                 type: int
                 range: { min: 2}
+
+    "bowtie2_mapping_ref":
+        type: map
+        mapping:
+            "options": 
+                type: str
+            "threads": 
+                type: int
+                range: { min: 1 }
+
+
 

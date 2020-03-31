@@ -7,18 +7,20 @@
 # use it, otherwise use input_samples.
 # ============================================================================
 
-input_directory: 
+input_directory:
 input_readtag: "_R[12]_"
 input_pattern: '*fastq.gz'
-paired_data: 
+paired_data:
 
 ##########################################################
 #
-# :param genbank_file: optional genbank 
+# :param genbank_file: optional genbank
 general:
     mapper: bwa
-    reference_file: 
-    annotation_file: 
+    reference_file:
+    annotation_file:
+    output_bigwig: false
+
 
 bwa_mem_mapping:
     index_algorithm: is
@@ -29,6 +31,10 @@ bwa_mem_mapping:
 minimap2:
     options: ''
 
+bowtie2_mapping_ref:
+    options:
+    threads: 4
+
 
 #############################################################################
 #
@@ -38,15 +44,15 @@ minimap2:
 # :param double_threshold: double threshold for clustering. Keep 0.5 if you do
 #     not know. Otherwise, checkout the online documentation on
 #     sequana.readthedocs.io
-# :param genbank_file: optional genbank 
+# :param genbank_file: optional genbank
 # :param high_threshold:
 # :param low_threshold:
 # :param mixture_models: keep to 2.
-# :param reference_file: optional fasta file corresponding to you mapped 
+# :param reference_file: optional fasta file corresponding to you mapped
 #i  data. Used for GC plot only
 # :param window: the W parameter of the running median. Keep as long as twice
 #     the deleted/depleted/duplicated you want to identify or to avoid. short
-#     genome will be set to genome length divided by 5 automatically. 
+#     genome will be set to genome length divided by 5 automatically.
 # :param chunksize: for large genomes, split the data into chunks
 # :param binning: for large genomes, merge data into bins of this size. You will
 #     loose resolution: bins are merged and averaged indeed
@@ -54,7 +60,7 @@ minimap2:
 #     distance is smaller than this parameter
 #
 sequana_coverage:
-    do: true
+    do: false
     circular: true
     window_size: 20001
     chunksize: 5000000
@@ -75,7 +81,7 @@ sequana_coverage:
 ##
 ## - options: any options recognised by multiqc
 ## - output-directory: Create report in the specified output directory
-## - config_file: by default, we use sequana RNA-seq multiqc_config file. 
+## - config_file: by default, we use sequana RNA-seq multiqc_config file.
 ##       If you want your own multiqc, fill this entry
 multiqc:
     options: "-p -f -m sequana_bamtools_stats -m sequana_coverage"

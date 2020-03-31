@@ -15,25 +15,8 @@ m.is_executable()
 
 
 class Options(argparse.ArgumentParser):
-    def __init__(self, prog=NAME):
-        usage = col.purple(
-            """This script prepares the sequana pipeline mapper layout to
-            include the Snakemake pipeline and its configuration file ready to
-            use.
-
-            In practice, it copies the config file and the pipeline into a
-            directory (mapper) together with an executable script
-
-            For a local run, use :
-
-                sequana_pipelines_mapper --input-directory PATH_TO_DATA
-
-            For a run on a SLURM cluster:
-
-                sequana_pipelines_mapper --input-directory PATH_TO_DATA
-
-        """
-        )
+    def __init__(self, prog=NAME, epilog=None):
+        usage = col.purple(sequana_prolog.format(**{"name": NAME}))
         super(Options, self).__init__(usage=usage, prog=prog, description="",
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
@@ -53,10 +36,18 @@ class Options(argparse.ArgumentParser):
         so.add_options(self)
 
         pipeline_group = self.add_argument_group("pipeline")
-        pipeline_group.add_argument("--mapper", default='bwa', 
-             choices=['bwa', 'minimap2'])
-        pipeline_group.add_argument("--reference-file", required=True, 
+        pipeline_group.add_argument("--mapper", default='bwa',
+             choices=['bwa', 'minimap2', 'bowtie2'])
+        pipeline_group.add_argument("--reference-file", required=True,
              )
+        pipeline_group.add_argument("--annotation-file",
+            help="Used by the sequana_coverage tool if provided" )
+
+        pipeline_group.add_argument("--do-coverage", action="store_true",
+            help="Use sequana_coverage (prokaryotes)" )
+
+        pipeline_group.add_argument("--create-bigwig", action="store_true",
+            help="create the bigwig files from the BAM files" )
 
 
 def main(args=None):
@@ -64,7 +55,9 @@ def main(args=None):
     if args is None:
         args = sys.argv
 
-    options = Options(NAME).parse_args(args[1:])
+    init_pipeline(NAME)
+
+    options = Options(NAME, epilog=sequana_epilog).parse_args(args[1:])
 
     manager = PipelineManager(options, NAME)
 
@@ -82,12 +75,17 @@ def main(args=None):
 
     cfg.general.mapper = options.mapper
     cfg.general.reference_file = os.path.abspath(options.reference_file)
-
     manager.exists(cfg.general.reference_file)
 
+    if options.annotation_file:
+        cfg.general.annotation_file = os.path.abspath(options.annotation_file)
+        manager.exists(cfg.general.annotation_file)
 
-    # checks input filenames and tags
-    #manager.check_input_files()
+    if options.do_coverage:
+        cfg.sequana_coverage.do = True
+
+    if options.create_bigwig:
+        cfg.general.create_bigwig = True
 
 
     # finalise the command and save it; copy the snakemake. update the config

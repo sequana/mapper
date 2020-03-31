@@ -17,6 +17,9 @@ from sequana import sequana_data
 configfile: "config.yaml"
 
 exec(open(sequana.modules["bwa_mem_dynamic"], "r").read())
+exec(open(sequana.modules["bowtie2_mapping_dynamic"], "r").read())
+exec(open(sequana.modules["bowtie2_index_dynamic"], "r").read())
+
 
 # A convenient manager
 #
@@ -34,6 +37,8 @@ rule pipeline:
 
 reference_file = config['general']['reference_file']
 annotation_file = config['general']['annotation_file']
+
+__prefix_name__ = reference_file.rsplit(".", -1)[0]
 
 
 if config['general']['mapper'] == "bwa":
@@ -69,6 +74,32 @@ elif config['general']['mapper'] == "minimap2":
             minimap2 {params.reference} {input} {params.options} -a | samtools view -b | bamtools sort -in - -out {output}
             """
     __bamtools_stats__input = __minimap2__output
+elif config['general']['mapper'] == "bowtie2":
+    __bowtie2_index_ref__output_done   = __prefix_name__ + ".1.bt2"
+    __bowtie2_index__ = __prefix_name__
+    if os.path.exists(__bowtie2_index_ref__output_done):
+        pass # index exists, no need to do it, everything should be fine
+    else:
+        # indexing for bowtie2
+        __bowtie2_index_ref__fasta =            reference_file
+        __bowtie2_index_ref__output_done =      __prefix_name__ + ".1.bt2"
+        __bowtie2_index_ref__output_prefix =    __prefix_name__
+        __bowtie2_index_ref__log = "logs/indexing/bowtie2_genome.log"
+        include: bowtie2_index_dynamic("ref")
+        #expected_output.extend([__bowtie2_index_ref__output_done])
+
+
+    __bowtie2_mapping_ref__input = __data__input
+    __bowtie2_mapping_ref__index_done = __bowtie2_index_ref__output_done
+    __bowtie2_mapping_ref__sort = manager.getname("bowtie2_mapping_ref", ".sorted.bam")
+    __bowtie2_mapping_ref__bam = manager.getname("bowtie2_mapping_ref", ".bam")
+    __bowtie2_mapping_ref__logs_err = manager.getname("bowtie2_mapping_ref", ".err")
+    __bowtie2_mapping_ref__logs_out = manager.getname("bowtie2_mapping_ref", ".out")
+    __bowtie2_mapping_ref__options = config["bowtie2_mapping_ref"]["options"]
+    __bowtie2_mapping_ref__prefix_index = __bowtie2_index__
+    include: bowtie2_mapping_dynamic("ref", manager)
+    __bamtools_stats__input =  __bowtie2_mapping_ref__sort
+
 
 
 # sample should be included at the end of the filename for the multiqc to work
@@ -84,6 +115,7 @@ rule bamtools_stats:
 
 # Sequana_coverage analysis
 expected_output = []
+__multiqc__input = expected_output
 if config["sequana_coverage"]["do"]:
     __samtools_depth__input = __bamtools_stats__input
     __samtools_depth__output = manager.getname("samtools_depth", ".bed")
