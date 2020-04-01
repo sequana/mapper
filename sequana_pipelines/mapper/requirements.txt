@@ -3,4 +3,4 @@
 - sambamba
 - samtools
 - bowtie2
-- bioconvert
+- deeptools
