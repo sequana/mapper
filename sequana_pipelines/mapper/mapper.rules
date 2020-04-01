@@ -141,6 +141,20 @@ if config["sequana_coverage"]["do"]:
     __multiqc__input = expected_output
 
 
+if config["general"]["create_bigwig"]:
+    __bam2bigwig__output = "{sample}/bigwig/{sample}.bw"
+    rule bam2bigwig:
+        input: __bamtools_stats__input
+        output: __bam2bigwig__output
+        log: "{sample}/bigwig/{sample}.log"
+        shell:
+            """
+            bamCoverage --bam {input} --outFileFormat bigwig --outFileName {output} > {log}
+            """
+    __multiqc__input += expand(__bam2bigwig__output, sample=manager.samples)
+
+
+
 __multiqc__input += expand(__bamtools_stats__output, sample=manager.samples)
 
 __multiqc__input_dir = "."
@@ -153,7 +167,7 @@ rule multiqc:
     params:
         inputdir = ".",
         outdir="multiqc",
-        config=sequana_data("multiqc_config.yaml", "../multiqc"),
+        config=config["multiqc"]["config_file"],
         options = config["multiqc"]["options"]
     shell:
         """

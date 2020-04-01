@@ -24,8 +24,8 @@ Usage
 
 ::
 
-    sequana_pipelines_mapper --help
-    sequana_pipelines_mapper --input-directory DATAPATH 
+    sequana_pipelines_mapper --input-directory DATAPATH  --mapper bwa --create-bigwig
+    sequana_pipelines_mapper --input-directory DATAPATH  --mapper bwa --do-coverage
 
 This creates a directory with the pipeline and configuration file. You will then need 
 to execute the pipeline::
@@ -51,6 +51,7 @@ This pipelines requires the following executable(s):
 - sequana_coverage
 - minimap2
 - bowtie2
+- deeptools
 
 .. image:: https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/dag.png
 
@@ -75,6 +76,8 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.8.8     * fix pipeline rule for bigwig + renamed output_bigwig into
+            create_bigwig; fix the multiqc config file
 0.8.7     * fix config file creation (for bigwig)
 0.8.6     * added bowtie2 mapper + bigwig as output, make coverage optional
 0.8.5     * create a sym link to the HTML report. Better post cleaning.

@@ -26,7 +26,7 @@ mapping:
                 type: str
             "annotation_file":
                 type: str
-            "output_bigwig":
+            "create_bigwig":
                 type: bool
 
     "bwa_mem_mapping":

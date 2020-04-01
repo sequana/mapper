@@ -19,7 +19,7 @@ general:
     mapper: bwa
     reference_file:
     annotation_file:
-    output_bigwig: false
+    create_bigwig: false
 
 
 bwa_mem_mapping:

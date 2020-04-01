@@ -85,7 +85,7 @@ def main(args=None):
         cfg.sequana_coverage.do = True
 
     if options.create_bigwig:
-        cfg.general.output_bigwig = True
+        cfg.general.create_bigwig = True
 
 
     # finalise the command and save it; copy the snakemake. update the config
