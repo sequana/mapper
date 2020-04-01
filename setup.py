@@ -59,7 +59,7 @@ setup(
     # This is recursive include of data files
     exclude_package_data = {"": ["__pycache__"]},
     package_data = {
-        '': ['*.yaml', "*.rules", "*.json", "requirements.txt"],
+        '': ['*.yaml', "*.rules", "*.json", "requirements.txt", "*png"],
         'sequana_pipelines.mapper.data' : ['*.*'], 
         },
 
