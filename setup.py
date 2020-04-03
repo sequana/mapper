@@ -4,7 +4,7 @@ from setuptools import setup, find_namespace_packages
 
 _MAJOR               = 0
 _MINOR               = 8
-_MICRO               = 8
+_MICRO               = 10
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
 
