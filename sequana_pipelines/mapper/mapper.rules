@@ -28,10 +28,10 @@ manager.setup(globals(), mode="warning")
 
 
 __data__input = manager.getrawdata()
-__pipeline_name__ = "mapper"
+
 
 rule pipeline:
-    input: "multiqc/multiqc_report.html"
+    input: "multiqc/multiqc_report.html", ".sequana/rulegraph.svg"
 
 reference_file = config['general']['reference_file']
 annotation_file = config['general']['annotation_file']
@@ -112,8 +112,7 @@ rule bamtools_stats:
 
 
 # Sequana_coverage analysis
-expected_output = []
-__multiqc__input = expected_output
+__multiqc__input = []
 if config["sequana_coverage"]["do"]:
 
     __bam2cov__input = __bamtools_stats__input
@@ -137,11 +136,9 @@ if config["sequana_coverage"]["do"]:
     __sequana_coverage__report_dir = __report_dir__
     __sequana_coverage__html = os.sep.join([
         __report_dir__, 'sequana_coverage.html'
-    ])
+     ])
     include: sm.modules["sequana_coverage"]
-    expected_output += expand(__sequana_coverage__html, sample=manager.samples)
-
-    __multiqc__input = expected_output
+    __multiqc__input += expand(__sequana_coverage__html, sample=manager.samples)
 
 
 if config["general"]["create_bigwig"]:
@@ -159,18 +156,15 @@ if config["general"]["create_bigwig"]:
 
 
 __multiqc__input += expand(__bamtools_stats__output, sample=manager.samples)
-
-__multiqc__input_dir = "."
-__multiqc__logs = "multiqc/multiqc.log"
-__multiqc__output = config['multiqc']['outdir'] + "/multiqc_report.html"
+__multiqc__output = "multiqc/multiqc_report.html"
 
 rule multiqc:
-    input: __multiqc__input
+    input:  __multiqc__input
     output: __multiqc__output
     params:
         inputdir = ".",
         outdir="multiqc",
-        config=config["multiqc"]["config_file"],
+        config="multiqc_config.yaml",
         options = config["multiqc"]["options"]
     shell:
         """
@@ -180,7 +174,6 @@ rule multiqc:
 
 __conda__output = ".sequana/conda.txt"
 include: sm.modules['conda']   # Create requirements.txt(dependencies)
-__rulegraph__input = __snakefile__
 __rulegraph__input = manager.snakefile
 __rulegraph__output = ".sequana/rulegraph.svg"
 __rulegraph__mapper = {"multiqc": "../multiqc/multiqc_report.html"}
@@ -194,7 +187,7 @@ localrules: multiqc, rulegraph, conda
 
 
 onsuccess:
-    shell("ln -f -s {} index.html".format(__multiqc__output))
+    #shell("ln -f -s {} index.html".format(__multiqc__output))
     shell("chmod -R g+w .")
 
     from sequana import logger
@@ -203,6 +196,42 @@ onsuccess:
     # This should create the stats plot and the Makefile
     manager.teardown()
     manager.clean_multiqc(__multiqc__output)
+
+    data = {"name": "mapper",
+            "rulegraph": __rulegraph__output,
+            "stats": "stats.txt"}
+    from sequana.modules_report.summary import SummaryModule2
+
+
+    intro = """<h2>Overview</h2>
+This pipeline mapper the different samples on the provided reference. 
+A <a href="multiqc/multiqc_report.html">multiqc report</a> is available. Here below are the details of the pipeline (parameters) together with summary plots.
+If coverage was selected, you should also have HTML reports for each sample with its coverage."""
+
+    if config["sequana_coverage"]["do"]:
+        intro += """<h2>Coverage plots overview</h2>"""
+        import glob
+        filenames = glob.glob("*/sequana_coverage/*/coverage.png")
+        if len(filenames)<100:
+            for filename in filenames:
+                parts = filename.split("/")
+                image = SummaryModule2.png_to_embedded_png("self_dummy", 
+                        filename,
+                        #style="align:center; width:30%; height:30%",
+                        style="align:center; width:95%; height:95%",
+                        alt=parts[0])
+                parts = filename.split("/")
+                link = "/".join(parts[0:-1] + [parts[-2] + ".cov.html"])
+
+                intro += """
+                <div class="box_1_3" ><a href="{}">{}</a><hr>
+                <a href="{}">{}</a>
+                </div>
+                """.format(link, image, link, parts[0])
+
+
+    s = SummaryModule2(data, intro=intro)
+
 
 
 onerror:

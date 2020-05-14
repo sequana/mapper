@@ -15,7 +15,7 @@
 # It's recommended that you delete any that you don't need.
 
 # Title to use for the report.
-title: "Sequana_mapper pipeline eport"
+title: "Sequana_mapper pipeline report"
 
 
 
@@ -64,6 +64,7 @@ fn_ignore_paths:
     - '*/path/to/*_files/'
 
 # Ignore files larger than this when searcing for logs (bytes)
+# fastqc files can be as large as 1Mb
 log_filesize_limit: 5000000
 
 # MultiQC skips a couple of debug messages when searching files as the
@@ -114,7 +115,7 @@ sp:
 custom_logo: .sequana/logo.png         # '/path/to/logo.png'
 custom_logo_url: https://github.com/sequana/sequana_mapper
 custom_logo_title: "Sequana pipeline page (mapper)"
-subtitle: ""            # Grey text below title
+subtitle: '<a href="https://github.com/sequana/sequana_mapper">Issues, stars, comments: visit the sequana_mapper page.</a>'
 intro_text: ""
 
 # Add generic information to the top of reports

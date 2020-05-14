@@ -10,7 +10,6 @@
 input_directory:
 input_readtag: "_R[12]_"
 input_pattern: '*fastq.gz'
-paired_data:
 
 ##########################################################
 #
@@ -85,6 +84,5 @@ sequana_coverage:
 ##       If you want your own multiqc, fill this entry
 multiqc:
     options: "-p -f -m sequana_bamtools_stats -m sequana_coverage"
-    outdir: multiqc
-    config_file: multiqc_config.yaml
+    indir: .
 

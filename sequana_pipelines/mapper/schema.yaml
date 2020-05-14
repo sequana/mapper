@@ -43,9 +43,7 @@ mapping:
         mapping:
             "options":
                 type: str
-            "outdir":
-                type: str
-            "config_file":
+            "indir":
                 type: str
 
     "minimap2": 
