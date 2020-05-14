@@ -76,6 +76,9 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.8.10    * change samtools_depth rule and switched to bam2cov to cope with null
+            coverage 
+0.8.9     * fix requirements
 0.8.8     * fix pipeline rule for bigwig + renamed output_bigwig into
             create_bigwig; fix the multiqc config file
 0.8.7     * fix config file creation (for bigwig)

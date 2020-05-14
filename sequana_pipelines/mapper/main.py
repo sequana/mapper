@@ -2,25 +2,22 @@ import sys
 import os
 import argparse
 
-from sequana.pipelines_common import *
-from sequana.snaketools import Module
-from sequana import logger
-logger.level = "INFO"
+from sequana_pipetools.options import *
+from sequana_pipetools.misc import Colors
+from sequana_pipetools.info import sequana_epilog, sequana_prolog
 
 col = Colors()
 
 NAME = "mapper"
-m = Module(NAME)
-m.is_executable()
 
 
 class Options(argparse.ArgumentParser):
     def __init__(self, prog=NAME, epilog=None):
         usage = col.purple(sequana_prolog.format(**{"name": NAME}))
         super(Options, self).__init__(usage=usage, prog=prog, description="",
+            epilog=epilog,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter
         )
-
         # add a new group of options to the parser
         so = SlurmOptions()
         so.add_options(self)
@@ -49,43 +46,64 @@ class Options(argparse.ArgumentParser):
         pipeline_group.add_argument("--create-bigwig", action="store_true",
             help="create the bigwig files from the BAM files" )
 
+    def parse_args(self, *args):
+        args_list = list(*args)
+        if "--from-project" in args_list:
+            if len(args_list)>2:
+                msg = "WARNING [sequana]: With --from-project option, " + \
+                        "pipeline and data-related options will be ignored."
+                print(col.error(msg))
+            for action in self._actions:
+                if action.required is True:
+                    action.required = False
+        options = super(Options, self).parse_args(*args)
+        return options
+
+
 
 def main(args=None):
 
     if args is None:
         args = sys.argv
 
-    init_pipeline(NAME)
+    # whatever needs to be called by all pipeline before the options parsing
+    from sequana_pipetools.options import before_pipeline
+    before_pipeline(NAME)
 
+    # option parsing including common epilog
     options = Options(NAME, epilog=sequana_epilog).parse_args(args[1:])
 
-    manager = PipelineManager(options, NAME)
+
+    from sequana.pipelines_common import SequanaManager
+
+    # the real stuff is here
+    manager = SequanaManager(options, NAME)
 
     # create the beginning of the command and the working directory
     manager.setup()
 
     # fill the config file with input parameters
-    cfg = manager.config.config
+    if options.from_project is None:
+        cfg = manager.config.config
 
-    # --------------------------------------------------- input  section
-    cfg.input_directory = os.path.abspath(options.input_directory)
-    cfg.input_pattern = options.input_pattern
-    cfg.input_readtag = options.input_readtag
-    cfg.paired_data = options.paired_data
+        # --------------------------------------------------- input  section
+        cfg.input_directory = os.path.abspath(options.input_directory)
+        cfg.input_pattern = options.input_pattern
+        cfg.input_readtag = options.input_readtag
 
-    cfg.general.mapper = options.mapper
-    cfg.general.reference_file = os.path.abspath(options.reference_file)
-    manager.exists(cfg.general.reference_file)
+        cfg.general.mapper = options.mapper
+        cfg.general.reference_file = os.path.abspath(options.reference_file)
+        manager.exists(cfg.general.reference_file)
 
-    if options.annotation_file:
-        cfg.general.annotation_file = os.path.abspath(options.annotation_file)
-        manager.exists(cfg.general.annotation_file)
+        if options.annotation_file:
+            cfg.general.annotation_file = os.path.abspath(options.annotation_file)
+            manager.exists(cfg.general.annotation_file)
 
-    if options.do_coverage:
-        cfg.sequana_coverage.do = True
+        if options.do_coverage:
+            cfg.sequana_coverage.do = True
 
-    if options.create_bigwig:
-        cfg.general.create_bigwig = True
+        if options.create_bigwig:
+            cfg.general.create_bigwig = True
 
 
     # finalise the command and save it; copy the snakemake. update the config
@@ -95,4 +113,3 @@ def main(args=None):
 
 if __name__ == "__main__":
     main()
-

@@ -12,9 +12,6 @@ mapping:
     "input_pattern":
         type: str
         required: True
-    "paired_data":
-        type: bool
-        required: True
 
     "general":
         type: map

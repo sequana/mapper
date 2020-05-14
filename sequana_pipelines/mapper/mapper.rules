@@ -22,12 +22,10 @@ exec(open(sequana.modules["bowtie2_index_dynamic"], "r").read())
 
 
 # A convenient manager
-#
-#
-try:
-    manager = sm.PipelineManager("mapper", config)
-except:
-    manager = sm.PipelineManager("mapper", config, fastq=False)
+# A convenient manager
+manager = sm.PipelineManager("mapper", config)
+manager.setup(globals(), mode="warning")
+
 
 __data__input = manager.getrawdata()
 __pipeline_name__ = "mapper"
@@ -117,12 +115,17 @@ rule bamtools_stats:
 expected_output = []
 __multiqc__input = expected_output
 if config["sequana_coverage"]["do"]:
-    __samtools_depth__input = __bamtools_stats__input
-    __samtools_depth__output = manager.getname("samtools_depth", ".bed")
-    __samtools_depth__log = manager.getlogdir("samtools_depth")
-    include: sm.modules["samtools_depth"]
 
-    __sequana_coverage__bed = __samtools_depth__output
+    __bam2cov__input = __bamtools_stats__input
+    __bam2cov__output = manager.getname("bam2cov", ".bed")
+    __bam2cov__log = manager.getlogdir("bam2cov")
+
+    rule bam2cov:
+        input: __bam2cov__input
+        output: __bam2cov__output
+        shell:
+            """bedtools genomecov -d -ibam {input} > {output} """
+    __sequana_coverage__bed = __bam2cov__output
     __sequana_coverage__fasta = reference_file
     if annotation_file:
         __sequana_coverage__gbk = annotation_file
@@ -174,8 +177,19 @@ rule multiqc:
         multiqc {params.inputdir} -o {params.outdir} -c {params.config} {params.options} 2> multiqc/multiqc.log
         """
 
+
+__conda__output = ".sequana/conda.txt"
+include: sm.modules['conda']   # Create requirements.txt(dependencies)
+__rulegraph__input = __snakefile__
+__rulegraph__input = manager.snakefile
+__rulegraph__output = ".sequana/rulegraph.svg"
+__rulegraph__mapper = {"multiqc": "../multiqc/multiqc_report.html"}
+include: sm.modules['rulegraph']
+
+
+
 # Those rules takes a couple of seconds so no need for a cluster
-localrules: multiqc
+localrules: multiqc, rulegraph, conda
 
 
 
@@ -183,11 +197,12 @@ onsuccess:
     shell("ln -f -s {} index.html".format(__multiqc__output))
     shell("chmod -R g+w .")
 
-    from sequana.snaketools import OnSuccessCleaner
-    sc = OnSuccessCleaner("mapper")
-    sc.add_makefile()
+    from sequana import logger
+    logger.level = "INFO"
 
-    sm.clean_multiqc(__multiqc__output)
+    # This should create the stats plot and the Makefile
+    manager.teardown()
+    manager.clean_multiqc(__multiqc__output)
 
 
 onerror:

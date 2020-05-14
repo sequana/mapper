@@ -15,7 +15,7 @@
 # It's recommended that you delete any that you don't need.
 
 # Title to use for the report.
-title: "Sequana mapper report"
+title: "Sequana_mapper pipeline eport"
 
 
 
@@ -130,4 +130,6 @@ table_columns_visible:
     FastQC:
         percent_fails: False
         total_sequences: True
-
+        percent_duplicates: False
+        percent_gc: True
+        avg_sequence_length: True

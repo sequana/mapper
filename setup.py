@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 # License: 3-clause BSD
 from setuptools import setup, find_namespace_packages
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+import subprocess
 
 _MAJOR               = 0
 _MINOR               = 8
-_MICRO               = 10
+_MICRO               = 11
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
 
@@ -34,9 +37,24 @@ metainfo = {
           'Topic :: Scientific/Engineering :: Physics']
     }
 
+NAME = "mapper"
+
+class Install(install):
+    def run(self):
+        cmd = "sequana_completion --name {} --force ".format(NAME)
+        try: subprocess.run(cmd.split())
+        except:pass
+        install.run(self)
+
+class Develop(develop):
+    def run(self):
+        cmd = "sequana_completion --name {} --force ".format(NAME)
+        try:subprocess.run(cmd.split())
+        except:pass
+        develop.run(self)
 
 setup(
-    name             = "sequana_mapper",
+    name             = "sequana_{}".format(NAME),
     version          = version,
     maintainer       = metainfo['authors']['main'][0],
     maintainer_email = metainfo['authors']['main'][1],
@@ -54,7 +72,7 @@ setup(
     packages = ["sequana_pipelines.mapper",
         'sequana_pipelines.mapper.data' ],
 
-    install_requires = "sequana",
+    install_requires = open("requirements.txt").read(),
 
     # This is recursive include of data files
     exclude_package_data = {"": ["__pycache__"]},
