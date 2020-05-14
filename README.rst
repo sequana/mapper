@@ -77,6 +77,7 @@ Changelog
 Version   Description
 ========= ====================================================================
 0.8.11    * Implemente the --from-project option and new framework
+          * custom HTMrLl report
 0.8.10    * change samtools_depth rule and switched to bam2cov to cope with null
             coverage 
 0.8.9     * fix requirements
