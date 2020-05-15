@@ -84,5 +84,4 @@ sequana_coverage:
 ##       If you want your own multiqc, fill this entry
 multiqc:
     options: "-p -f -m sequana_bamtools_stats -m sequana_coverage"
-    indir: .
 

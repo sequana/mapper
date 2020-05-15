@@ -1,4 +1,21 @@
-"""mapper pipeline
+# coding: utf-8
+#
+#  This file is part of Sequana software
+#
+#  Copyright (c) 2016 - Sequana Development Team
+#
+#  File author(s):
+#      thomas cokelaer <thomas.cokelaer@pasteur.fr>
+#
+#  Distributed under the terms of the 3-clause BSD license.
+#  The full license is in the LICENSE file, distributed with this software.
+#
+#  website: https://github.com/sequana/sequana
+#  documentation: http://sequana.readthedocs.io
+#
+##############################################################################
+"""
+import os
 
 Author: Thomas Cokelaer
 Affiliation: Institut Pasteur @ 2019
@@ -21,7 +38,6 @@ exec(open(sequana.modules["bowtie2_mapping_dynamic"], "r").read())
 exec(open(sequana.modules["bowtie2_index_dynamic"], "r").read())
 
 
-# A convenient manager
 # A convenient manager
 manager = sm.PipelineManager("mapper", config)
 manager.setup(globals(), mode="warning")
@@ -157,19 +173,8 @@ if config["general"]["create_bigwig"]:
 
 __multiqc__input += expand(__bamtools_stats__output, sample=manager.samples)
 __multiqc__output = "multiqc/multiqc_report.html"
+include: sm.modules["multiqc/2.0"]
 
-rule multiqc:
-    input:  __multiqc__input
-    output: __multiqc__output
-    params:
-        inputdir = ".",
-        outdir="multiqc",
-        config="multiqc_config.yaml",
-        options = config["multiqc"]["options"]
-    shell:
-        """
-        multiqc {params.inputdir} -o {params.outdir} -c {params.config} {params.options} 2> multiqc/multiqc.log
-        """
 
 
 __conda__output = ".sequana/conda.txt"
