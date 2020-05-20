@@ -29,6 +29,7 @@ bwa_mem_mapping:
 
 minimap2:
     options: ''
+    threads: 4
 
 bowtie2_mapping_ref:
     options:

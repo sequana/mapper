@@ -131,6 +131,6 @@ table_columns_visible:
     FastQC:
         percent_fails: False
         total_sequences: True
-        percent_duplicates: False
+        percent_duplicates: True
         percent_gc: True
         avg_sequence_length: True

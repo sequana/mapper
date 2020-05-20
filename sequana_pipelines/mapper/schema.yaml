@@ -51,6 +51,9 @@ mapping:
         mapping:
             "options":
                 type: str
+            "threads": 
+                type: int
+                range: { min: 1 }
 
     "sequana_coverage":
         type: map

@@ -76,6 +76,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.8.13    * add the thread option in minimap2 case
 0.8.12    * factorise multiqc rule
 0.8.11    * Implemente the --from-project option and new framework
           * custom HTMrLl report
