@@ -34,14 +34,18 @@ class Options(argparse.ArgumentParser):
 
         pipeline_group = self.add_argument_group("pipeline")
         pipeline_group.add_argument("--mapper", default='bwa',
-             choices=['bwa', 'minimap2', 'bowtie2'])
+             choices=['bwa', 'minimap2', 'bowtie2'], 
+            help="Choose one of the valid mapper")
         pipeline_group.add_argument("--reference-file", required=True,
-             )
+             help="You input reference file in fasta format")
         pipeline_group.add_argument("--annotation-file",
             help="Used by the sequana_coverage tool if provided" )
 
         pipeline_group.add_argument("--do-coverage", action="store_true",
             help="Use sequana_coverage (prokaryotes)" )
+
+        pipeline_group.add_argument("--pacbio", action="store_true",
+            help="If set, automatically set the input-readtag to None and set minimap2 options to -x map-pb" )
 
         pipeline_group.add_argument("--create-bigwig", action="store_true",
             help="create the bigwig files from the BAM files" )
@@ -103,6 +107,11 @@ def main(args=None):
 
         if options.create_bigwig:
             cfg.general.create_bigwig = True
+
+        if options.pacbio:
+            cfg.minimap2.options = " -x map-pb "
+            cfg.input_readtag = ""
+
 
 
     # finalise the command and save it; copy the snakemake. update the config

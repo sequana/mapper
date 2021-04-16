@@ -19,6 +19,7 @@ general:
     reference_file:
     annotation_file:
     create_bigwig: false
+    
 
 
 bwa_mem_mapping:

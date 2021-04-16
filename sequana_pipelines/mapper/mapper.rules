@@ -40,6 +40,7 @@ exec(open(sequana.modules["bowtie2_index_dynamic"], "r").read())
 
 # A convenient manager
 manager = sm.PipelineManager("mapper", config)
+
 manager.setup(globals(), mode="warning")
 
 
@@ -197,7 +198,7 @@ onsuccess:
     shell("chmod -R g+w .")
 
     from sequana import logger
-    logger.level = "INFO"
+    logger.setLevel("INFO")
 
     # This should create the stats plot and the Makefile
     manager.teardown()
@@ -218,22 +219,23 @@ If coverage was selected, you should also have HTML reports for each sample with
         intro += """<h2>Coverage plots overview</h2>"""
         import glob
         filenames = glob.glob("*/sequana_coverage/*/coverage.png")
-        if len(filenames)<100:
-            for filename in filenames:
-                parts = filename.split("/")
-                image = SummaryModule2.png_to_embedded_png("self_dummy", 
+        for count, filename in enumerate(filenames):
+            parts = filename.split("/")
+            image = SummaryModule2.png_to_embedded_png("self_dummy", 
                         filename,
                         #style="align:center; width:30%; height:30%",
                         style="align:center; width:95%; height:95%",
                         alt=parts[0])
-                parts = filename.split("/")
-                link = "/".join(parts[0:-1] + [parts[-2] + ".cov.html"])
+            parts = filename.split("/")
+            link = "/".join(parts[0:-1] + [parts[-2] + ".cov.html"])
 
-                intro += """
-                <div class="box_1_3" ><a href="{}">{}</a><hr>
-                <a href="{}">{}</a>
-                </div>
-                """.format(link, image, link, parts[0])
+            intro += """
+            <div class="box_1_3" ><a href="{}">{}</a><hr>
+            <a href="{}">{}</a>
+            </div>
+            """.format(link, image, link, parts[0])
+            if count > 0:
+                break
 
 
     s = SummaryModule2(data, intro=intro)

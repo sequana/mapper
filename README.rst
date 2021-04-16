@@ -1,8 +1,8 @@
 This is is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
 :Overview: This is a simple pipeline to map several FastQ files onto a reference using different mappers/aligners
-:Input: A set of FastQ files.
-:Output: A set of BAM files (and/or bigwig)
+:Input: A set of FastQ files (illumina, pacbio, etc).
+:Output: A set of BAM files (and/or bigwig) and HTML report
 :Status: Production
 :Citation: Cokelaer et al, (2017), ‘Sequana’: a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI doi:10.21105/joss.00352
 
@@ -60,7 +60,10 @@ Details
 ~~~~~~~~~
 
 This pipeline runs **mapper** in parallel on the input fastq files (paired or not). 
-A brief sequana summary report is also produced.
+A brief sequana summary report is also produced. When using **--pacbio** option, 
+*-x map-pb* options ia automatically added to the config.yaml file and the
+readtag is set to None. 
+
 
 
 Rules and configuration details
@@ -76,6 +79,9 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.9.0     * fix issue with logger and increments requirements
+          * add new option --pacbio to automatically set the options for 
+            pacbio data (-x map-pb and readtag set to None)
 0.8.13    * add the thread option in minimap2 case
 0.8.12    * factorise multiqc rule
 0.8.11    * Implemente the --from-project option and new framework
