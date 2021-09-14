@@ -40,7 +40,7 @@ jobs:
     - name: conda
       run: |
         conda install -c conda-forge mamba --quiet
-        mamba install -c bioconda -c conda-forge --quiet -y bwa bamtools samtools multiqc sambamba
+        mamba install -c bioconda -c conda-forge --quiet -y bwa bamtools samtools sambamba
 
     - name: Install dependencies
       run: |
@@ -49,6 +49,7 @@ jobs:
     - name: install package itself
       run: |
          pip install .
+         pip install multiqc
 
     - name: testing
       run: |

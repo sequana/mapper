@@ -43,7 +43,11 @@ mapping:
         mapping:
             "options":
                 type: str
-            "indir":
+            "modules":
+                type: str
+            "config_file":
+                type: str
+            "input_directory":
                 type: str
 
     "minimap2": 
