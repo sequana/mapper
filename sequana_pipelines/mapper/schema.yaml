@@ -26,7 +26,7 @@ mapping:
             "create_bigwig":
                 type: bool
 
-    "bwa_mem_mapping":
+    "bwa":
         type: map
         mapping:
             "index_algorithm":
@@ -105,7 +105,7 @@ mapping:
                 type: int
                 range: { min: 2}
 
-    "bowtie2_mapping_ref":
+    "bowtie2":
         type: map
         mapping:
             "options": 
@@ -114,5 +114,22 @@ mapping:
                 type: int
                 range: { min: 1 }
 
+    "bowtie2_index":
+        type: map
+        mapping:
+            "options": 
+                type: str
+            "threads": 
+                type: int
+                range: { min: 1 }
+
+    "bwa_index":
+        type: map
+        mapping:
+            "options": 
+                type: str
+            "threads": 
+                type: int
+                range: { min: 1 }
 
 
