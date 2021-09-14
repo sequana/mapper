@@ -3,14 +3,14 @@ import os
 import tempfile
 import subprocess
 import sys
-from sequana.pipelines_common import get_pipeline_location as getpath
 
-sharedir = getpath('mapper')
+from . import test_dir
 
+sharedir = f"{test_dir}/data"
 
 def test_standalone_subprocess():
     directory = tempfile.TemporaryDirectory()
-    cmd = """sequana_pipelines_mapper --input-directory {} 
+    cmd = """sequana_mapper --input-directory {} 
             --working-directory {} --force""".format(sharedir, directory.name)
     subprocess.call(cmd.split())
 
@@ -49,6 +49,6 @@ def test_full():
         assert os.path.exists(wk + "/multiqc/multiqc_report.html")
 
 def test_version():
-    cmd = "sequana_pipelines_mapper --version"
+    cmd = "sequana_mapper --version"
     subprocess.call(cmd.split())
 

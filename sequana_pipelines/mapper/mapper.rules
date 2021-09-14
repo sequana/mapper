@@ -1,4 +1,3 @@
-# coding: utf-8
 #
 #  This file is part of Sequana software
 #
@@ -14,21 +13,12 @@
 #  documentation: http://sequana.readthedocs.io
 #
 ##############################################################################
-"""
+"""Mappper pipeline"""
 import os
 
-Author: Thomas Cokelaer
-Affiliation: Institut Pasteur @ 2019
-
-This pipeline is part of Sequana software (sequana.readthedocs.io)
-
-snakemake -s mapper.rules --forceall --stats stats.txt --cores 4
-
-
-"""
 import sequana
-from sequana import snaketools as sm
-from sequana import sequana_data
+
+from sequana_pipetools import snaketools as sm
 
 # This must be defined before the include
 configfile: "config.yaml"

@@ -1,5 +1,5 @@
 # ============================================================================
-# Config file for Quality Control
+# Config file for Sequana_mapper pipeline
 # ==========================================[ Sections for the users ]========
 #
 # One of input_directory, input_pattern and input_samples must be provided
@@ -13,14 +13,11 @@ input_pattern: '*fastq.gz'
 
 ##########################################################
 #
-# :param genbank_file: optional genbank
 general:
     mapper: bwa
     reference_file:
     annotation_file:
     create_bigwig: false
-    
-
 
 bwa_mem_mapping:
     index_algorithm: is

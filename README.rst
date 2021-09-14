@@ -1,3 +1,15 @@
+
+.. image:: https://badge.fury.io/py/sequana-mapper.svg
+     :target: https://pypi.python.org/pypi/sequana_mapper
+
+.. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
+    :target: http://joss.theoj.org/papers/10.21105/joss.00352
+    :alt: JOSS (journal of open source software) DOI
+
+.. image:: https://github.com/sequana/mapper/actions/workflows/main.yml/badge.svg
+   :target: https://github.com/sequana/mapper/actions/workflows    
+
+
 This is is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
 :Overview: This is a simple pipeline to map several FastQ files onto a reference using different mappers/aligners
@@ -10,13 +22,13 @@ This is is the **mapper** pipeline from the `Sequana <https://sequana.readthedoc
 Installation
 ~~~~~~~~~~~~
 
-You must install Sequana first::
+You must install Sequana first (use --upgrade to get the latest version installed)::
 
-    pip install sequana
+    pip install sequana --upgrade
 
 Then, just install this package::
 
-    pip install sequana_mapper
+    pip install sequana_mapper --upgrade
 
 
 Usage
@@ -24,8 +36,8 @@ Usage
 
 ::
 
-    sequana_pipelines_mapper --input-directory DATAPATH  --mapper bwa --create-bigwig
-    sequana_pipelines_mapper --input-directory DATAPATH  --mapper bwa --do-coverage
+    sequana_mapper --input-directory DATAPATH  --mapper bwa --create-bigwig
+    sequana_mapper --input-directory DATAPATH  --mapper bwa --do-coverage
 
 This creates a directory with the pipeline and configuration file. You will then need 
 to execute the pipeline::
@@ -53,7 +65,7 @@ This pipelines requires the following executable(s):
 - bowtie2
 - deeptools
 
-.. image:: https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/dag.png
+.. image:: https://raw.githubusercontent.com/sequana/mapper/master/sequana_pipelines/mapper/dag.png
 
 
 Details
@@ -69,7 +81,7 @@ readtag is set to None.
 Rules and configuration details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is the `latest documented configuration file <https://raw.githubusercontent.com/sequana/sequana_mapper/master/sequana_pipelines/mapper/config.yaml>`_
+Here is the `latest documented configuration file <https://raw.githubusercontent.com/sequana/mapper/master/sequana_pipelines/mapper/config.yaml>`_
 to be used with the pipeline. Each rule used in the pipeline may have a section in the configuration file. 
 
 
@@ -100,4 +112,12 @@ Version   Description
 0.8.1     * fix bamtools stats rule to have different output name for multiqc
 0.8.0     **First release.**
 ========= ====================================================================
+
+
+Contribute & Code of Conduct
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To contribute to this project, please take a look at the 
+`Contributing Guidelines <https://github.com/sequana/sequana/blob/master/CONTRIBUTING.rst>`_ first. Please note that this project is released with a 
+`Code of Conduct <https://github.com/sequana/sequana/blob/master/CONDUCT.md>`_. By contributing to this project, you agree to abide by its terms.
 
