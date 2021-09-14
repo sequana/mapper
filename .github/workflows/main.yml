@@ -40,7 +40,7 @@ jobs:
     - name: conda
       run: |
         conda install -c conda-forge mamba --quiet
-        mamba install -c bioconda -c conda-forge --quiet -y bwa bamtools samtools multiqc
+        mamba install -c bioconda -c conda-forge --quiet -y bwa bamtools samtools multiqc sambamba
 
     - name: Install dependencies
       run: |
