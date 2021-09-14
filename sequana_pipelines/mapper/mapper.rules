@@ -1,10 +1,7 @@
 #
 #  This file is part of Sequana software
 #
-#  Copyright (c) 2016 - Sequana Development Team
-#
-#  File author(s):
-#      thomas cokelaer <thomas.cokelaer@pasteur.fr>
+#  Copyright (c) 2016-2021 - Sequana Development Team
 #
 #  Distributed under the terms of the 3-clause BSD license.
 #  The full license is in the LICENSE file, distributed with this software.
@@ -23,10 +20,6 @@ from sequana_pipetools import snaketools as sm
 # This must be defined before the include
 configfile: "config.yaml"
 
-exec(open(sequana.modules["bwa_mem_dynamic"], "r").read())
-exec(open(sequana.modules["bowtie2_mapping_dynamic"], "r").read())
-exec(open(sequana.modules["bowtie2_index_dynamic"], "r").read())
-
 
 # A convenient manager
 manager = sm.PipelineManager("mapper", config)
@@ -38,9 +31,19 @@ __data__input = manager.getrawdata()
 
 
 rule pipeline:
-    input: "multiqc/multiqc_report.html", ".sequana/rulegraph.svg"
+    input: "multiqc/multiqc_report.html", ".sequana/rulegraph.svg", "reference/genome.fasta"
+
 
 reference_file = config['general']['reference_file']
+
+
+rule copy_reference:
+    input: config['general']['reference_file']
+    output: "reference/genome.fasta"
+    shell:
+        """cp {input} {output}"""
+
+
 annotation_file = config['general']['annotation_file']
 
 __prefix_name__ = reference_file.rsplit(".", -1)[0]
@@ -48,64 +51,97 @@ __prefix_name__ = reference_file.rsplit(".", -1)[0]
 
 if config['general']['mapper'] == "bwa":
     reference = config["general"]["reference_file"]
-    """if not os.path.isfile(reference + ".bwt"):
-        exec(open(sequana.modules["dynamic_copy"], "r").read())
-        __copy_ref__input = reference
-        __copy_ref__output = "reference/" + os.path.basename(reference)
-        include: dynamic_copy("ref", manager)
-        __bwa_mem_mapping__reference = __copy_ref__output
-    else:
-        __bwa_mem_mapping__reference = reference
-    """
-    __bwa_index_mapping__log = "common_logs/bwa_index.log"
-    __bwa_mem_mapping__fastq = __data__input
-    __bwa_mem_mapping__reference = reference_file
-    __bwa_mem_mapping__bam = manager.getname("bwa_mem_mapping", ".sorted.bam")
-    __bwa_mem_mapping__fai = __bwa_mem_mapping__reference + ".bwt"
-    __bwa_mem_mapping__log = manager.getlogdir("bwa_mem_mapping")
-    include: bwa_mem_dynamic("mapping", manager)
 
-    __bamtools_stats__input = __bwa_mem_mapping__bam
-elif config['general']['mapper'] == "minimap2":
-    __minimap2__output = manager.getname("minimap2", ".sorted.bam")
-    rule minimap2:
-        input: __data__input
-        output: __minimap2__output
-        threads: config["minimap2"]["threads"]
+    rule bwa_index:
+        input:
+            reference="reference/genome.fasta"
+        output:
+            bwa_bwt="reference/genome.fasta.bwt",
+            fai="reference/genome.fasta.fai"
+        log:
+            "reference/build.log"
         params:
-            reference=config['general']['reference_file'],
+            options="",
+            index_algorithm='is'
+        threads: 2
+        wrapper:
+            "main/wrappers/bwa/build"
+
+    rule bwa:
+        input:
+            fastq=manager.getrawdata(),
+            bwa_bwt="reference/genome.fasta.bwt",
+            fai="reference/genome.fasta.fai",
+            reference="reference/genome.fasta"
+        output:
+            sorted="{sample}/{sample}.sorted.bam",
+        log:
+            "{sample}/{sample}.log"
+        params:
+            options=config["bwa"]["options"],
+            tmp_directory=config["bwa"]["tmp_directory"]
+        threads: 2
+        wrapper:
+            "main/wrappers/bwa/align"
+
+elif config['general']['mapper'] == "minimap2":
+    rule minimap2:
+        input:
+            fastq=manager.getrawdata(),
+            reference="reference/genome.fasta"
+        output:
+            "{sample}/{sample}.sorted.bam"
+        threads:
+            config["minimap2"]["threads"]
+        params:
             options=config['minimap2']['options']
-        shell:
-            """
-            minimap2 -t {threads} {params.reference} {input} {params.options} -a | samtools view -b | bamtools sort -in - -out {output}
-            """
-    __bamtools_stats__input = __minimap2__output
+        wrapper:
+            "main/wrappers/minimap2"
+
 elif config['general']['mapper'] == "bowtie2":
-    __bowtie2_index_ref__output_done   = __prefix_name__ + ".1.bt2"
-    __bowtie2_index__ = __prefix_name__
-    if os.path.exists(__bowtie2_index_ref__output_done):
-        pass # index exists, no need to do it, everything should be fine
-    else:
-        # indexing for bowtie2
-        __bowtie2_index_ref__fasta =            reference_file
-        __bowtie2_index_ref__output_done =      __prefix_name__ + ".1.bt2"
-        __bowtie2_index_ref__output_prefix =    __prefix_name__
-        __bowtie2_index_ref__log = "logs/indexing/bowtie2_genome.log"
-        include: bowtie2_index_dynamic("ref")
-        #expected_output.extend([__bowtie2_index_ref__output_done])
+    if not os.path.exists("reference/genome.1.bt2"):
+        rule bowtie2_index:
+            input:
+                reference="reference/genome.fasta"
+            output:
+                "reference/genome.1.bt2",
+                "reference/genome.fasta.fai"
+            log:
+                "logs/indexing/bowtie2_genome.log"
+            params:
+                options=config["bowtie2_index"]["options"]
+            threads: config['bowtie2_index']['threads']
+            wrapper:
+                "main/wrappers/bowtie2/build"
 
+    rule bowtie2:
+        input:
+            sample=manager.getrawdata(),
+            fai="reference/genome.fasta.fai",
+            reference="reference/genome.fasta",
+            bt2="reference/genome.1.bt2"
+        output:
+            sorted="{sample}/{sample}.sorted.bam",
+        log:
+            "logs/bowtie2/{sample}.log"
+        params:
+            index="reference/genome",
+            options=config["bowtie2"]["options"]
+        threads: config["bowtie2"]["threads"]
+        wrapper:
+            "main/wrappers/bowtie2/align"
 
-    __bowtie2_mapping_ref__input = __data__input
-    __bowtie2_mapping_ref__index_done = __bowtie2_index_ref__output_done
-    __bowtie2_mapping_ref__sort = manager.getname("bowtie2_mapping_ref", ".sorted.bam")
-    __bowtie2_mapping_ref__bam = manager.getname("bowtie2_mapping_ref", ".bam")
-    __bowtie2_mapping_ref__logs_err = manager.getname("bowtie2_mapping_ref", ".err")
-    __bowtie2_mapping_ref__logs_out = manager.getname("bowtie2_mapping_ref", ".out")
-    __bowtie2_mapping_ref__options = config["bowtie2_mapping_ref"]["options"]
-    __bowtie2_mapping_ref__prefix_index = __bowtie2_index__
-    include: bowtie2_mapping_dynamic("ref", manager)
-    __bamtools_stats__input =  __bowtie2_mapping_ref__sort
+__bamtools_stats__input =  "{sample}/{sample}.sorted.bam"
 
+rule bam_indexing:
+    input:
+        "{sample}/{sample}.sorted.bam"
+    output:
+        "{sample}/{sample}.sorted.bam.bai"
+    shell:
+        """
+           bamtools index -in {input}
+        """
 
 
 # sample should be included at the end of the filename for the multiqc to work
@@ -139,7 +175,6 @@ if config["sequana_coverage"]["do"]:
     else:
         __sequana_coverage__gbk = []
     config["sequana_coverage"]['k'] = config['sequana_coverage']['mixture_models']
-    #__sequana_coverage__csv = "{sample}/rois."
     __report_dir__ = "{sample}/sequana_coverage"
     __sequana_coverage__report_dir = __report_dir__
     __sequana_coverage__html = os.sep.join([
@@ -162,41 +197,60 @@ if config["general"]["create_bigwig"]:
     __multiqc__input += expand(__bam2bigwig__output, sample=manager.samples)
 
 
-
 __multiqc__input += expand(__bamtools_stats__output, sample=manager.samples)
 __multiqc__output = "multiqc/multiqc_report.html"
-include: sm.modules["multiqc/2.0"]
+
+rule multiqc:
+   input:
+        __multiqc__input
+   output:
+       __multiqc__output
+   params:
+       options=config['multiqc']['options'],
+       input_directory=config['multiqc']['input_directory'],
+       config_file=config['multiqc']['config_file'],
+       modules=config['multiqc']['modules']
+   log:
+       "multiqc/multiqc.log"
+   wrapper:
+       "main/wrappers/multiqc"
 
 
 
-__conda__output = ".sequana/conda.txt"
-include: sm.modules['conda']   # Create requirements.txt(dependencies)
-__rulegraph__input = manager.snakefile
-__rulegraph__output = ".sequana/rulegraph.svg"
-__rulegraph__mapper = {"multiqc": "../multiqc/multiqc_report.html"}
-include: sm.modules['rulegraph']
+__rulegraph__mapper = {"multiqc": f"../{__multiqc__output}"}
 
+
+rule rulegraph:
+    input: manager.snakefile
+    output:
+        svg = ".sequana/rulegraph.svg"
+    params:
+        mapper = __rulegraph__mapper,
+        configname = "config.yaml"
+    wrapper:
+        "main/wrappers/rulegraph"
 
 
 # Those rules takes a couple of seconds so no need for a cluster
-localrules: multiqc, rulegraph, conda
+localrules: multiqc, rulegraph
 
 
 
 onsuccess:
-    #shell("ln -f -s {} index.html".format(__multiqc__output))
     shell("chmod -R g+w .")
 
-    from sequana import logger
-    logger.setLevel("INFO")
+    from sequana import logger as mylog
+    mylog.setLevel("INFO")
 
     # This should create the stats plot and the Makefile
     manager.teardown()
     manager.clean_multiqc(__multiqc__output)
 
+
+    from sequana_pipelines.mapper import version as mapper_version
     data = {"name": "mapper",
-            "rulegraph": __rulegraph__output,
-            "stats": "stats.txt"}
+            "rulegraph": ".sequana/rulegraph.svg",
+            "pipeline_version": mapper_version}
     from sequana.modules_report.summary import SummaryModule2
 
 
@@ -231,7 +285,8 @@ If coverage was selected, you should also have HTML reports for each sample with
     s = SummaryModule2(data, intro=intro)
 
 
-
 onerror:
-    print("An error occurred. See message above.")
+    from sequana_pipetools.errors import PipeError
+    p = PipeError("fastqc")
+    p.status()
 

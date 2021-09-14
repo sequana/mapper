@@ -19,7 +19,7 @@ general:
     annotation_file:
     create_bigwig: false
 
-bwa_mem_mapping:
+bwa:
     index_algorithm: is
     options: -T 30 -M
     threads: 4
@@ -29,9 +29,20 @@ minimap2:
     options: ''
     threads: 4
 
-bowtie2_mapping_ref:
-    options:
+bowtie2:
+    options: ''
     threads: 4
+
+bowtie2_index:
+    options: ''
+    threads: 4
+
+bwa_index:
+    options: ''
+    threads: 4
+
+
+
 
 
 #############################################################################
@@ -82,5 +93,8 @@ sequana_coverage:
 ## - config_file: by default, we use sequana RNA-seq multiqc_config file.
 ##       If you want your own multiqc, fill this entry
 multiqc:
-    options: "-p -f -m sequana_bamtools_stats -m sequana_coverage"
+  options: "-p -f "
+  modules: sequana_bamtools_stats sequana_coverage bowtie2 bowtie1
+  input_directory: "."
+  config_file: "multiqc_config.yaml" 
 
