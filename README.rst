@@ -91,7 +91,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
-0.9.1     * use new wrappers framework 
+0.10.0    * use new wrappers framework 
 0.9.0     * fix issue with logger and increments requirements
           * add new option --pacbio to automatically set the options for 
             pacbio data (-x map-pb and readtag set to None)
