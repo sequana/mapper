@@ -38,7 +38,7 @@ def test_full():
         print(directory)
         wk = directory
 
-        cmd = "sequana_pipelines_mapper --input-directory {} "
+        cmd = "sequana_mapper --input-directory {} "
         cmd += " --working-directory {}  --force "
         cmd += " --reference-file "+  sharedir + "/measles.fa"
         cmd = cmd.format(sharedir, wk)

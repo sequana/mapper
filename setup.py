@@ -20,16 +20,16 @@ metainfo = {
     'platforms' : ['Linux', 'Unix', 'MacOsX', 'Windows'],
     'keywords' : ['snakemake, sequana, bwa, bowtie2, minimap2'],
     'classifiers' : [
-          'Development Status :: 4 - Beta',
-          #'Development Status :: 5 - Production/Stable',
+          'Development Status :: 5 - Production/Stable',
           'Intended Audience :: Education',
           'Intended Audience :: End Users/Desktop',
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
           'License :: OSI Approved :: BSD License',
           'Operating System :: OS Independent',
-          'Programming Language :: Python :: 3.5',
-          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
           'Topic :: Software Development :: Libraries :: Python Modules',
           'Topic :: Scientific/Engineering :: Bio-Informatics',
           'Topic :: Scientific/Engineering :: Information Analysis',
@@ -69,8 +69,7 @@ setup(
     classifiers      = metainfo['classifiers'],
 
     # package installation
-    packages = ["sequana_pipelines.mapper",
-        'sequana_pipelines.mapper.data' ],
+    packages = ["sequana_pipelines.mapper"],
 
     install_requires = open("requirements.txt").read(),
 
@@ -84,7 +83,6 @@ setup(
     zip_safe=False,
 
     entry_points = {'console_scripts':[
-        'sequana_pipelines_mapper=sequana_pipelines.mapper.main:main',
         'sequana_mapper=sequana_pipelines.mapper.main:main']
     }
 
