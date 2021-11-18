@@ -50,6 +50,7 @@ jobs:
       run: |
          pip install .
          pip install multiqc
+         pip install "snakemake<=6.7.0"
 
     - name: testing
       run: |
