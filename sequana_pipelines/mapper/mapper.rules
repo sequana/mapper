@@ -161,8 +161,8 @@ __multiqc__input = []
 if config["sequana_coverage"]["do"]:
 
     __bam2cov__input = __bamtools_stats__input
-    __bam2cov__output = manager.getname("bam2cov", ".bed")
-    __bam2cov__log = manager.getlogdir("bam2cov")
+    __bam2cov__output = "{sample}/bam2cov/{sample}.bed"
+    __bam2cov__log = "{sample}/bam2cov/{sample}.log"
 
     rule bam2cov:
         input: __bam2cov__input
