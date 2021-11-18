@@ -198,38 +198,18 @@ if config["general"]["create_bigwig"]:
     __multiqc__input += expand(__bam2bigwig__output, sample=manager.samples)
 
 
-__multiqc__input += expand(__bamtools_stats__output, sample=manager.samples)
-__multiqc__output = "multiqc/multiqc_report.html"
-
-rule multiqc:
-   input:
-        __multiqc__input
-   output:
-       __multiqc__output
-   params:
-       options=config['multiqc']['options'],
-       input_directory=config['multiqc']['input_directory'],
-       config_file=config['multiqc']['config_file'],
-       modules=config['multiqc']['modules']
-   log:
-       "multiqc/multiqc.log"
-   wrapper:
-       "main/wrappers/multiqc"
 
 
+# ========================================================== multiqc
+#
+sequana_multiqc_input = __multiqc__input
+include: sm.modules["multiqc/2.0"]
 
-__rulegraph__mapper = {"multiqc": f"../{__multiqc__output}"}
+# ========================================================== rulegraph
+#
+sequana_rulegraph_mapper = {"multiqc": "../multiqc/multiqc_report.html"}
+include: sm.modules['rulegraph']
 
-
-rule rulegraph:
-    input: manager.snakefile
-    output:
-        svg = ".sequana/rulegraph.svg"
-    params:
-        mapper = __rulegraph__mapper,
-        configname = "config.yaml"
-    wrapper:
-        "main/wrappers/rulegraph"
 
 
 # Those rules takes a couple of seconds so no need for a cluster

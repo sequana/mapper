@@ -129,6 +129,8 @@ def main(args=None):
     # file and save it.
     manager.teardown()
 
+    if options.run:
+        subprocess.Popen(["sh", '{}.sh'.format(NAME)], cwd=options.workdir)
 
 if __name__ == "__main__":
     main()
