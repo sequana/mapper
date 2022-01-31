@@ -117,11 +117,12 @@ elif config['general']['mapper'] == "bowtie2":
 
     rule bowtie2:
         input:
-            sample=manager.getrawdata(),
+            fastq=manager.getrawdata(),
             fai="reference/genome.fasta.fai",
             reference="reference/genome.fasta",
             bt2="reference/genome.1.bt2"
         output:
+            bam="{sample}/{sample}.bam",
             sorted="{sample}/{sample}.sorted.bam",
         log:
             "logs/bowtie2/{sample}.log"
