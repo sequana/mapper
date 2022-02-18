@@ -122,8 +122,7 @@ elif config['general']['mapper'] == "bowtie2":
             reference="reference/genome.fasta",
             bt2="reference/genome.1.bt2"
         output:
-            bam="{sample}/{sample}.bam",
-            sorted="{sample}/{sample}.sorted.bam",
+            bam="{sample}/{sample}.sorted.bam",
         log:
             "logs/bowtie2/{sample}.log"
         params:
