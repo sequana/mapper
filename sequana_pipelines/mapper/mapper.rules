@@ -162,7 +162,7 @@ if config["feature_counts"]["do"]:
             counts="{sample}/feature_counts/{sample}_feature.out",
             summary="{sample}/feature_counts/{sample}_feature.out.summary"    
         params:
-            strandness=config["feature_counts"]["strandness"],
+            strandness=0,
             options=config["feature_counts"]["options"]
         threads:
             config["feature_counts"]['threads']

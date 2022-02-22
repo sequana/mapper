@@ -45,7 +45,6 @@ feature_counts:
   do: False
   options: ''
   gff: ''
-  strandness: '0'
   threads: 4
 
 #############################################################################
