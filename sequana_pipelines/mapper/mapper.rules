@@ -29,11 +29,10 @@ manager.setup(globals(), mode="warning")
 
 
 __data__input = manager.getrawdata()
+__multiqc__input = []
 
-
-rule pipeline:
-    input: "multiqc/multiqc_report.html", ".sequana/rulegraph.svg", "reference/genome.fasta"
-
+rule pipeline: 
+    input: "multiqc/multiqc_report.html", ".sequana/rulegraph.svg", "reference/genome.fasta",
 
 reference_file = config['general']['reference_file']
 
@@ -85,6 +84,7 @@ if config['general']['mapper'] == "bwa":
         wrapper:
             "main/wrappers/bwa/align"
 
+
 elif config['general']['mapper'] == "minimap2":
     rule minimap2:
         input:
@@ -117,12 +117,12 @@ elif config['general']['mapper'] == "bowtie2":
 
     rule bowtie2:
         input:
-            sample=manager.getrawdata(),
+            fastq=manager.getrawdata(),
             fai="reference/genome.fasta.fai",
             reference="reference/genome.fasta",
             bt2="reference/genome.1.bt2"
         output:
-            sorted="{sample}/{sample}.sorted.bam",
+            bam="{sample}/{sample}.sorted.bam",
         log:
             "logs/bowtie2/{sample}.log"
         params:
@@ -132,7 +132,7 @@ elif config['general']['mapper'] == "bowtie2":
         wrapper:
             "main/wrappers/bowtie2/align"
 
-__bamtools_stats__input =  "{sample}/{sample}.sorted.bam"
+__multiqc__input += expand("{sample}/{sample}.sorted.bam", sample=manager.samples)
 
 rule bam_indexing:
     input:
@@ -144,20 +144,37 @@ rule bam_indexing:
            bamtools index -in {input}
         """
 
-
 # sample should be included at the end of the filename for the multiqc to work
-__bamtools_stats__output = "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
 rule bamtools_stats:
-    input: __bamtools_stats__input
-    output: __bamtools_stats__output
+    input: "{sample}/{sample}.sorted.bam"
+    output: "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
     shell:
         "bamtools stats -in {input} > {output}"
 
+__multiqc__input += expand("{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", sample=manager.samples)
 
+if config["feature_counts"]["do"]:
+    rule feature_counts:
+        input:
+            bam="{sample}/{sample}.sorted.bam",
+            gff=config["feature_counts"]["gff"]
+        output:
+            counts="{sample}/feature_counts/{sample}_feature.out",
+            summary="{sample}/feature_counts/{sample}_feature.out.summary"    
+        params:
+            strandness=0,
+            options=config["feature_counts"]["options"]
+        threads:
+            config["feature_counts"]['threads']
+        log:
+            "{sample}/feature_counts/feature_counts.log"
+        wrapper:
+            "main/wrappers/feature_counts"
 
-
+    __multiqc__input += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
+    
 # Sequana_coverage analysis
-__multiqc__input = []
+
 if config["sequana_coverage"]["do"]:
 
     __bam2cov__input = __bamtools_stats__input
@@ -188,7 +205,7 @@ if config["sequana_coverage"]["do"]:
 if config["general"]["create_bigwig"]:
     __bam2bigwig__output = "{sample}/bigwig/{sample}.bw"
     rule bam2bigwig:
-        input: __bamtools_stats__input
+        input: "{sample}/{sample}.sorted.bam"
         output: __bam2bigwig__output
         log: "{sample}/bigwig/{sample}.log"
         shell:
@@ -197,25 +214,41 @@ if config["general"]["create_bigwig"]:
             """
     __multiqc__input += expand(__bam2bigwig__output, sample=manager.samples)
 
-
-
-
 # ========================================================== multiqc
-#
-sequana_multiqc_input = __multiqc__input
-include: sm.modules["multiqc/2.0"]
+
+multiqc_params_options = config['multiqc']['options']
+if manager.config.multiqc.config_file:
+    multiqc_params_options += f" -c {manager.config.multiqc.config_file}"
+
+rule multiqc:
+    input:
+        __multiqc__input
+    output:
+       "multiqc/multiqc_report.html"
+    params:
+        options=multiqc_params_options,
+        input_directory=config['multiqc']['input_directory'],
+        config_file=config['multiqc']['config_file'],
+        modules=config['multiqc']['modules']
+    log:
+        "multiqc/multiqc.log"
+    wrapper:
+       "main/wrappers/multiqc"
 
 # ========================================================== rulegraph
-#
-sequana_rulegraph_mapper = {"multiqc": "../multiqc/multiqc_report.html"}
-include: sm.modules['rulegraph']
 
-
+rule rulegraph:
+    input: str(manager.snakefile)
+    output:
+        svg = ".sequana/rulegraph.svg"
+    params:
+        mapper = {"multiqc": "../multiqc/multiqc_report.html"},
+        configname = "config.yaml"
+    wrapper:
+        "main/wrappers/rulegraph"
 
 # Those rules takes a couple of seconds so no need for a cluster
 localrules: multiqc, rulegraph
-
-
 
 onsuccess:
     shell("chmod -R g+w .")
@@ -225,7 +258,7 @@ onsuccess:
 
     # This should create the stats plot and the Makefile
     manager.teardown()
-    manager.clean_multiqc(__multiqc__output)
+    manager.clean_multiqc("multiqc/multiqc_report.html")
 
 
     from sequana_pipelines.mapper import version as mapper_version

@@ -29,9 +29,12 @@ NAME = "mapper"
 class Options(argparse.ArgumentParser):
     def __init__(self, prog=NAME, epilog=None):
         usage = col.purple(sequana_prolog.format(**{"name": NAME}))
-        super(Options, self).__init__(usage=usage, prog=prog, description="",
+        super(Options, self).__init__(
+            usage=usage,
+            prog=prog,
+            description="",
             epilog=epilog,
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         )
         # add a new group of options to the parser
         so = SlurmOptions()
@@ -48,33 +51,38 @@ class Options(argparse.ArgumentParser):
         so.add_options(self)
 
         pipeline_group = self.add_argument_group("pipeline")
-        pipeline_group.add_argument("--mapper", default='bwa',
-             choices=['bwa', 'minimap2', 'bowtie2'], 
-            help="Choose one of the valid mapper")
-        pipeline_group.add_argument("--reference-file", required=True,
-             help="You input reference file in fasta format")
-        pipeline_group.add_argument("--annotation-file",
-            help="Used by the sequana_coverage tool if provided" )
+        pipeline_group.add_argument(
+            "--mapper", default="bwa", choices=["bwa", "minimap2", "bowtie2"], help="Choose one of the valid mapper"
+        )
+        pipeline_group.add_argument("--reference-file", required=True, help="You input reference file in fasta format")
+        pipeline_group.add_argument("--annotation-file", help="Used by the sequana_coverage tool if provided")
 
-        pipeline_group.add_argument("--do-coverage", action="store_true",
-            help="Use sequana_coverage (prokaryotes)" )
+        pipeline_group.add_argument("--do-coverage", action="store_true", help="Use sequana_coverage (prokaryotes)")
 
-        pipeline_group.add_argument("--pacbio", action="store_true",
-            help="If set, automatically set the input-readtag to None and set minimap2 options to -x map-pb" )
+        pipeline_group.add_argument(
+            "--pacbio",
+            action="store_true",
+            help="If set, automatically set the input-readtag to None and set minimap2 options to -x map-pb",
+        )
 
-        pipeline_group.add_argument("--create-bigwig", action="store_true",
-            help="create the bigwig files from the BAM files" )
+        pipeline_group.add_argument(
+            "--create-bigwig", action="store_true", help="create the bigwig files from the BAM files"
+        )
+        pipeline_group.add_argument(
+            "--capture-annotation-file",
+            help="SAF formatted file for capture efficiency calculation with featureCounts.",
+        )
 
-        self.add_argument("--run", default=False, action="store_true",
-            help="execute the pipeline directly")
-
+        self.add_argument("--run", default=False, action="store_true", help="execute the pipeline directly")
 
     def parse_args(self, *args):
         args_list = list(*args)
         if "--from-project" in args_list:
-            if len(args_list)>2:
-                msg = "WARNING [sequana]: With --from-project option, " + \
-                        "pipeline and data-related options will be ignored."
+            if len(args_list) > 2:
+                msg = (
+                    "WARNING [sequana]: With --from-project option, "
+                    + "pipeline and data-related options will be ignored."
+                )
                 print(col.error(msg))
             for action in self._actions:
                 if action.required is True:
@@ -127,14 +135,18 @@ def main(args=None):
             cfg.minimap2.options = " -x map-pb "
             cfg.input_readtag = ""
 
-
+        if options.capture_annotation_file:
+            cfg.feature_counts.do = True
+            cfg.feature_counts.options = "-F SAF "
+            cfg.feature_counts.gff = os.path.abspath(options.capture_annotation_file)
 
     # finalise the command and save it; copy the snakemake. update the config
     # file and save it.
     manager.teardown()
 
     if options.run:
-        subprocess.Popen(["sh", '{}.sh'.format(NAME)], cwd=options.workdir)
+        subprocess.Popen(["sh", "{}.sh".format(NAME)], cwd=options.workdir)
+
 
 if __name__ == "__main__":
     main()

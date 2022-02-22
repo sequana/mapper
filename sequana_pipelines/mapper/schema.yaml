@@ -136,4 +136,16 @@ mapping:
                 type: int
                 range: { min: 1 }
 
+    "feature_counts":
+        type: map
+        mapping:
+            "do":
+              type: bool
+            "options":
+                type: str
+            "gff":
+                type: str
+            "threads":
+                type: int
+                range: { min: 1 }
 

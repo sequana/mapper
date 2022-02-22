@@ -41,9 +41,11 @@ bwa_index:
     options: ''
     threads: 4
 
-
-
-
+feature_counts:
+  do: False
+  options: ''
+  gff: ''
+  threads: 4
 
 #############################################################################
 #
@@ -94,7 +96,7 @@ sequana_coverage:
 ##       If you want your own multiqc, fill this entry
 multiqc:
   options: "-p -f "
-  modules: sequana_bamtools_stats sequana_coverage bowtie2 bowtie1
+  modules: sequana_bamtools_stats sequana_coverage bowtie2 bowtie1 featureCounts
   input_directory: "."
   config_file: "multiqc_config.yaml" 
 
