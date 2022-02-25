@@ -53,6 +53,25 @@ def test_standalone_script_minimap2():
     ]
     m.main()
 
+def test_standalone_script_saf():
+    directory = tempfile.TemporaryDirectory()
+    import sequana_pipelines.mapper.main as m
+
+    sys.argv = [
+        "test",
+        "--input-directory",
+        sharedir,
+        "--reference-file",
+        sharedir + "/measles.fa",
+        "--working-directory",
+        directory.name,
+        "--force",
+        "--capture-annotation-file", 
+        sharedir + "/test.saf",
+    ]
+    m.main()
+
+
 
 def test_full():
 

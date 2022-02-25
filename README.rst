@@ -73,7 +73,7 @@ Details
 
 This pipeline runs **mapper** in parallel on the input fastq files (paired or not). 
 A brief sequana summary report is also produced. When using **--pacbio** option, 
-*-x map-pb* options ia automatically added to the config.yaml file and the
+*-x map-pb* options is automatically added to the config.yaml file and the
 readtag is set to None. 
 
 
@@ -91,6 +91,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.11.0    * implement feature counts for capture-seq projects
 0.10.1    * remove getlogdir and getname
 0.10.0    * use new wrappers framework 
 0.9.0     * fix issue with logger and increments requirements
