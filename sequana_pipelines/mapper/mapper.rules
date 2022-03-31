@@ -105,8 +105,8 @@ elif config['general']['mapper'] == "bowtie2":
             input:
                 reference="reference/genome.fasta"
             output:
-                "reference/genome.1.bt2",
-                "reference/genome.fasta.fai"
+                multiext("reference/genome", ".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", ".rev.1.bt2", ".rev.2.bt2"),
+
             log:
                 "logs/indexing/bowtie2_genome.log"
             params:
@@ -118,15 +118,12 @@ elif config['general']['mapper'] == "bowtie2":
     rule bowtie2:
         input:
             fastq=manager.getrawdata(),
-            fai="reference/genome.fasta.fai",
-            reference="reference/genome.fasta",
-            bt2="reference/genome.1.bt2"
+            idx=multiext("reference/genome",".1.bt2",".2.bt2",".3.bt2",".4.bt2",".rev.1.bt2",".rev.2.bt2"),
         output:
             bam="{sample}/{sample}.sorted.bam",
         log:
             "logs/bowtie2/{sample}.log"
         params:
-            index="reference/genome",
             options=config["bowtie2"]["options"]
         threads: config["bowtie2"]["threads"]
         wrapper:
