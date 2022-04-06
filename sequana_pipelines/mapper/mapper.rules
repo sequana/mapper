@@ -25,7 +25,7 @@ configfile: "config.yaml"
 # A convenient manager
 manager = sm.PipelineManager("mapper", config)
 
-manager.setup(globals(), mode="warning")
+sequana_wrapper_branch = "main"
 
 
 __data__input = manager.getrawdata()
@@ -65,7 +65,7 @@ if config['general']['mapper'] == "bwa":
             index_algorithm='is'
         threads: 2
         wrapper:
-            "main/wrappers/bwa/build"
+            f"{sequana_wrapper_branch}/wrappers/bwa/build"
 
     rule bwa:
         input:
@@ -82,7 +82,7 @@ if config['general']['mapper'] == "bwa":
             tmp_directory=config["bwa"]["tmp_directory"]
         threads: 2
         wrapper:
-            "main/wrappers/bwa/align"
+            f"{sequana_wrapper_branch}/wrappers/bwa/align"
 
 
 elif config['general']['mapper'] == "minimap2":
@@ -97,7 +97,7 @@ elif config['general']['mapper'] == "minimap2":
         params:
             options=config['minimap2']['options']
         wrapper:
-            "main/wrappers/minimap2"
+            f"{sequana_wrapper_branch}/wrappers/minimap2"
 
 elif config['general']['mapper'] == "bowtie2":
     if not os.path.exists("reference/genome.1.bt2"):
@@ -113,7 +113,7 @@ elif config['general']['mapper'] == "bowtie2":
                 options=config["bowtie2_index"]["options"]
             threads: config['bowtie2_index']['threads']
             wrapper:
-                "main/wrappers/bowtie2/build"
+                f"{sequana_wrapper_branch}/wrappers/bowtie2/build"
 
     rule bowtie2:
         input:
@@ -127,7 +127,7 @@ elif config['general']['mapper'] == "bowtie2":
             options=config["bowtie2"]["options"]
         threads: config["bowtie2"]["threads"]
         wrapper:
-            "main/wrappers/bowtie2/align"
+            f"{sequana_wrapper_branch}/wrappers/bowtie2/align"
 
 __multiqc__input += expand("{sample}/{sample}.sorted.bam", sample=manager.samples)
 
@@ -166,7 +166,7 @@ if config["feature_counts"]["do"]:
         log:
             "{sample}/feature_counts/feature_counts.log"
         wrapper:
-            "main/wrappers/feature_counts"
+            f"{sequana_wrapper_branch}/wrappers/feature_counts"
 
     __multiqc__input += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
     
@@ -230,19 +230,11 @@ rule multiqc:
     log:
         "multiqc/multiqc.log"
     wrapper:
-       "main/wrappers/multiqc"
+       f"{sequana_wrapper_branch}/wrappers/multiqc"
 
 # ========================================================== rulegraph
-
-rule rulegraph:
-    input: str(manager.snakefile)
-    output:
-        svg = ".sequana/rulegraph.svg"
-    params:
-        mapper = {"multiqc": "../multiqc/multiqc_report.html"},
-        configname = "config.yaml"
-    wrapper:
-        "main/wrappers/rulegraph"
+sequana_rulegraph_mapper = {"multiqc": "../multiqc/multiqc_report.html"}
+include: sm.modules['rulegraph']
 
 # Those rules takes a couple of seconds so no need for a cluster
 localrules: multiqc, rulegraph

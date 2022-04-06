@@ -7,10 +7,10 @@
     :alt: JOSS (journal of open source software) DOI
 
 .. image:: https://github.com/sequana/mapper/actions/workflows/main.yml/badge.svg
-   :target: https://github.com/sequana/mapper/actions/workflows    
+   :target: https://github.com/sequana/mapper/actions/    
 
 
-This is is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
+This is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
 :Overview: This is a simple pipeline to map several FastQ files onto a reference using different mappers/aligners
 :Input: A set of FastQ files (illumina, pacbio, etc).
