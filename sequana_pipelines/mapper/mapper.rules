@@ -169,12 +169,12 @@ if config["feature_counts"]["do"]:
             f"{sequana_wrapper_branch}/wrappers/feature_counts"
 
     __multiqc__input += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
-    
+
 # Sequana_coverage analysis
 
 if config["sequana_coverage"]["do"]:
 
-    __bam2cov__input = __bamtools_stats__input
+    __bam2cov__input = "{sample}/{sample}.sorted.bam",
     __bam2cov__output = "{sample}/bam2cov/{sample}.bed"
     __bam2cov__log = "{sample}/bam2cov/{sample}.log"
 
