@@ -91,6 +91,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+0.11.1    * Fix typo when setting coverage to True
 0.11.0    * implement feature counts for capture-seq projects
 0.10.1    * remove getlogdir and getname
 0.10.0    * use new wrappers framework 
