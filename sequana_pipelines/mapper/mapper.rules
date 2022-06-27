@@ -23,12 +23,15 @@ configfile: "config.yaml"
 
 
 # A convenient manager
-manager = sm.PipelineManager("mapper", config)
+if config['input_readtag']:
+    manager = sm.PipelineManager("mapper", config)
+else:
+    manager = sm.PipelineManager("mapper", config, fastq=False)
+
 
 sequana_wrapper_branch = "main"
 
 
-__data__input = manager.getrawdata()
 __multiqc__input = []
 
 rule pipeline: 
@@ -140,6 +143,8 @@ rule bam_indexing:
         """
            bamtools index -in {input}
         """
+
+__multiqc__input += expand("{sample}/{sample}.sorted.bam.bai", sample=manager.samples)
 
 # sample should be included at the end of the filename for the multiqc to work
 rule bamtools_stats:

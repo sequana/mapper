@@ -39,7 +39,7 @@ jobs:
 
     - name: conda
       run: |
-        conda install -c conda-forge mamba --quiet
+        conda install -c conda-forge --quiet 'mamba==0.18.1' python=${{ matrix.python }}
         mamba install -c bioconda -c conda-forge --quiet -y bwa bamtools samtools sambamba
 
     - name: Install dependencies
