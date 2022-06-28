@@ -295,6 +295,6 @@ If coverage was selected, you should also have HTML reports for each sample with
 
 onerror:
     from sequana_pipetools.errors import PipeError
-    p = PipeError("fastqc")
+    p = PipeError("mapper")
     p.status()
 

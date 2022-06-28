@@ -88,10 +88,10 @@ to be used with the pipeline. Each rule used in the pipeline may have a section 
 Changelog
 ~~~~~~~~~
 
-========= ====================================================================
+========= ======================================================================
 Version   Description
-========= ====================================================================
-0.11.1    * Fix typo when setting coverage to True
+========= ======================================================================
+0.11.1    * Fix typo when setting coverage to True and allow untagged filenames
 0.11.0    * implement feature counts for capture-seq projects
 0.10.1    * remove getlogdir and getname
 0.10.0    * use new wrappers framework 
@@ -115,7 +115,7 @@ Version   Description
 0.8.2     * add minimap2 mapper 
 0.8.1     * fix bamtools stats rule to have different output name for multiqc
 0.8.0     **First release.**
-========= ====================================================================
+========= ======================================================================
 
 
 Contribute & Code of Conduct
