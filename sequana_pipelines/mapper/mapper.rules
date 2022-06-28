@@ -23,12 +23,15 @@ configfile: "config.yaml"
 
 
 # A convenient manager
-manager = sm.PipelineManager("mapper", config)
+if config['input_readtag']:
+    manager = sm.PipelineManager("mapper", config)
+else:
+    manager = sm.PipelineManager("mapper", config, fastq=False)
+
 
 sequana_wrapper_branch = "main"
 
 
-__data__input = manager.getrawdata()
 __multiqc__input = []
 
 rule pipeline: 
@@ -141,6 +144,8 @@ rule bam_indexing:
            bamtools index -in {input}
         """
 
+__multiqc__input += expand("{sample}/{sample}.sorted.bam.bai", sample=manager.samples)
+
 # sample should be included at the end of the filename for the multiqc to work
 rule bamtools_stats:
     input: "{sample}/{sample}.sorted.bam"
@@ -169,12 +174,12 @@ if config["feature_counts"]["do"]:
             f"{sequana_wrapper_branch}/wrappers/feature_counts"
 
     __multiqc__input += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
-    
+
 # Sequana_coverage analysis
 
 if config["sequana_coverage"]["do"]:
 
-    __bam2cov__input = __bamtools_stats__input
+    __bam2cov__input = "{sample}/{sample}.sorted.bam",
     __bam2cov__output = "{sample}/bam2cov/{sample}.bed"
     __bam2cov__log = "{sample}/bam2cov/{sample}.log"
 
@@ -290,6 +295,6 @@ If coverage was selected, you should also have HTML reports for each sample with
 
 onerror:
     from sequana_pipetools.errors import PipeError
-    p = PipeError("fastqc")
+    p = PipeError("mapper")
     p.status()
 
