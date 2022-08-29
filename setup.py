@@ -1,12 +1,11 @@
-# License: 3-clause BSD
 from setuptools import setup, find_namespace_packages
 from setuptools.command.develop import develop
 from setuptools.command.install import install
 import subprocess
 
 _MAJOR               = 0
-_MINOR               = 11
-_MICRO               = 1
+_MINOR               = 12
+_MICRO               = 0
 version              = '%d.%d.%d' % (_MAJOR, _MINOR, _MICRO)
 release              = '%d.%d' % (_MAJOR, _MINOR)
 
@@ -38,19 +37,6 @@ metainfo = {
 
 NAME = "mapper"
 
-class Install(install):
-    def run(self):
-        cmd = "sequana_completion --name {} --force ".format(NAME)
-        try: subprocess.run(cmd.split())
-        except:pass
-        install.run(self)
-
-class Develop(develop):
-    def run(self):
-        cmd = "sequana_completion --name {} --force ".format(NAME)
-        try:subprocess.run(cmd.split())
-        except:pass
-        develop.run(self)
 
 setup(
     name             = "sequana_{}".format(NAME),

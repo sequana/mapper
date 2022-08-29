@@ -145,6 +145,10 @@ mapping:
                 type: str
             "gff":
                 type: str
+            "feature":
+                type: str
+            "attribute":
+                type: str
             "threads":
                 type: int
                 range: { min: 1 }

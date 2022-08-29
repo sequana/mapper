@@ -34,8 +34,11 @@ sequana_wrapper_branch = "main"
 
 __multiqc__input = []
 
-rule pipeline: 
-    input: "multiqc/multiqc_report.html", ".sequana/rulegraph.svg", "reference/genome.fasta",
+rule pipeline:
+    input:
+        "multiqc/multiqc_report.html",
+        ".sequana/rulegraph.svg",
+        "reference/genome.fasta",
 
 reference_file = config['general']['reference_file']
 
@@ -44,12 +47,12 @@ rule copy_reference:
     input: config['general']['reference_file']
     output: "reference/genome.fasta"
     shell:
-        """cp {input} {output}"""
+        """
+        cp {input} {output}
+        """
 
 
 annotation_file = config['general']['annotation_file']
-
-__prefix_name__ = reference_file.rsplit(".", -1)[0]
 
 
 if config['general']['mapper'] == "bwa":
@@ -67,6 +70,8 @@ if config['general']['mapper'] == "bwa":
             options="",
             index_algorithm='is'
         threads: 2
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bwa/build"
 
@@ -84,6 +89,8 @@ if config['general']['mapper'] == "bwa":
             options=config["bwa"]["options"],
             tmp_directory=config["bwa"]["tmp_directory"]
         threads: 2
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bwa/align"
 
@@ -99,6 +106,8 @@ elif config['general']['mapper'] == "minimap2":
             config["minimap2"]["threads"]
         params:
             options=config['minimap2']['options']
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/minimap2"
 
@@ -114,7 +123,10 @@ elif config['general']['mapper'] == "bowtie2":
                 "logs/indexing/bowtie2_genome.log"
             params:
                 options=config["bowtie2_index"]["options"]
-            threads: config['bowtie2_index']['threads']
+            threads:
+                config['bowtie2_index']['threads']
+            container:
+                "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
             wrapper:
                 f"{sequana_wrapper_branch}/wrappers/bowtie2/build"
 
@@ -128,7 +140,10 @@ elif config['general']['mapper'] == "bowtie2":
             "logs/bowtie2/{sample}.log"
         params:
             options=config["bowtie2"]["options"]
-        threads: config["bowtie2"]["threads"]
+        threads:
+            config["bowtie2"]["threads"]
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bowtie2/align"
 
@@ -139,19 +154,28 @@ rule bam_indexing:
         "{sample}/{sample}.sorted.bam"
     output:
         "{sample}/{sample}.sorted.bam.bai"
+    container:
+        "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
     shell:
         """
-           bamtools index -in {input}
+        bamtools index -in {input}
         """
 
 __multiqc__input += expand("{sample}/{sample}.sorted.bam.bai", sample=manager.samples)
 
 # sample should be included at the end of the filename for the multiqc to work
 rule bamtools_stats:
-    input: "{sample}/{sample}.sorted.bam"
-    output: "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
+    input:
+        bam="{sample}/{sample}.sorted.bam",
+        bai="{sample}/{sample}.sorted.bam.bai"
+    output:
+        "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
+    container:
+        "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
     shell:
-        "bamtools stats -in {input} > {output}"
+        """
+        bamtools stats -in {input[0]} > {output}
+        """
 
 __multiqc__input += expand("{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", sample=manager.samples)
 
@@ -162,14 +186,18 @@ if config["feature_counts"]["do"]:
             gff=config["feature_counts"]["gff"]
         output:
             counts="{sample}/feature_counts/{sample}_feature.out",
-            summary="{sample}/feature_counts/{sample}_feature.out.summary"    
+            summary="{sample}/feature_counts/{sample}_feature.out.summary"
         params:
             strandness=0,
-            options=config["feature_counts"]["options"]
+            options=config["feature_counts"]["options"],
+            feature=config["feature_counts"]["feature"],
+            attribute=config["feature_counts"]["attribute"]
         threads:
             config["feature_counts"]['threads']
         log:
             "{sample}/feature_counts/feature_counts.log"
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/feature_counts"
 
@@ -179,42 +207,62 @@ if config["feature_counts"]["do"]:
 
 if config["sequana_coverage"]["do"]:
 
-    __bam2cov__input = "{sample}/{sample}.sorted.bam",
-    __bam2cov__output = "{sample}/bam2cov/{sample}.bed"
-    __bam2cov__log = "{sample}/bam2cov/{sample}.log"
-
     rule bam2cov:
-        input: __bam2cov__input
-        output: __bam2cov__output
+        input:
+            "{sample}/{sample}.sorted.bam",
+        output:
+            "{sample}/bam2cov/{sample}.bed"
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         shell:
-            """bedtools genomecov -d -ibam {input} > {output} """
-    __sequana_coverage__bed = __bam2cov__output
-    __sequana_coverage__fasta = reference_file
-    if annotation_file:
-        __sequana_coverage__gbk = annotation_file
-    else:
-        __sequana_coverage__gbk = []
-    config["sequana_coverage"]['k'] = config['sequana_coverage']['mixture_models']
-    __report_dir__ = "{sample}/sequana_coverage"
-    __sequana_coverage__report_dir = __report_dir__
-    __sequana_coverage__html = os.sep.join([
-        __report_dir__, 'sequana_coverage.html'
-     ])
-    include: sm.modules["sequana_coverage"]
-    __multiqc__input += expand(__sequana_coverage__html, sample=manager.samples)
+            """
+            bedtools genomecov -d -ibam {input} > {output}
+            """
+
+    def get_sequana_coverage_input(config):
+        input_file = {
+            "bed": "{sample}/bam2cov/{sample}.bed",
+            "fasta": reference_file
+        }
+        if config["general"]["annotation_file"]:
+            input_file['gbk'] = config["general"]["annotation_file"]
+        return input_file
+
+    rule sequana_coverage:
+        input:
+            **get_sequana_coverage_input(config)
+        output:
+            "{sample}/sequana_coverage/sequana_coverage.html"
+        params:
+            circular=config["sequana_coverage"]["circular"],
+            window_size=config["sequana_coverage"]["window_size"],
+            chunksize=config["sequana_coverage"]["chunksize"],
+            double_threshold=config["sequana_coverage"]["double_threshold"],
+            gc_window_size=config["sequana_coverage"]["gc_window_size"],
+            high_threshold=config["sequana_coverage"]["high_threshold"],
+            low_threshold=config["sequana_coverage"]["low_threshold"],
+            mixture_models=config["sequana_coverage"]["mixture_models"]
+        wrapper:
+            f"{sequana_wrapper_branch}/wrappers/sequana_coverage"
+
+    __multiqc__input += expand("{sample}/sequana_coverage/sequana_coverage.html", sample=manager.samples)
 
 
 if config["general"]["create_bigwig"]:
-    __bam2bigwig__output = "{sample}/bigwig/{sample}.bw"
     rule bam2bigwig:
-        input: "{sample}/{sample}.sorted.bam"
-        output: __bam2bigwig__output
-        log: "{sample}/bigwig/{sample}.log"
+        input:
+            "{sample}/{sample}.sorted.bam"
+        output:
+            "{sample}/bigwig/{sample}.bw"
+        log:
+            "{sample}/bigwig/{sample}.log"
+        container:
+            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
         shell:
             """
             bamCoverage --bam {input} --outFileFormat bigwig --outFileName {output} > {log}
             """
-    __multiqc__input += expand(__bam2bigwig__output, sample=manager.samples)
+    __multiqc__input += expand("{sample}/bigwig/{sample}.bw", sample=manager.samples)
 
 # ========================================================== multiqc
 

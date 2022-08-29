@@ -8,7 +8,7 @@
 # ============================================================================
 
 input_directory:
-input_readtag: "_R[12]_"
+input_readtag: _R[12]_
 input_pattern: '*fastq.gz'
 
 ##########################################################
@@ -42,10 +42,12 @@ bwa_index:
     threads: 4
 
 feature_counts:
-  do: False
-  options: ''
-  gff: ''
-  threads: 4
+    do: False
+    options: ''
+    gff: ''
+    feature: 'gene'
+    attribute: 'ID'
+    threads: 4
 
 #############################################################################
 #
@@ -71,7 +73,7 @@ feature_counts:
 #     distance is smaller than this parameter
 #
 sequana_coverage:
-    do: false
+    do: true
     circular: true
     window_size: 20001
     chunksize: 5000000
@@ -95,8 +97,8 @@ sequana_coverage:
 ## - config_file: by default, we use sequana RNA-seq multiqc_config file.
 ##       If you want your own multiqc, fill this entry
 multiqc:
-  options: "-p -f "
-  modules: sequana_bamtools_stats sequana_coverage bowtie2 bowtie1 featureCounts
-  input_directory: "."
-  config_file: "multiqc_config.yaml" 
+    options: "-p -f"
+    modules: sequana_bamtools_stats sequana_coverage bowtie2 bowtie1 featureCounts
+    input_directory: "."
+    config_file: "multiqc_config.yaml"
 
