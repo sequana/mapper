@@ -1,7 +1,20 @@
-bwa
-minimap2
-sambamba
-samtools
-bowtie2
-deeptools
-bamtools
+name: mapper
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - bwa
+  - minimap2
+  - bowtie2
+  - samtools
+  - deeptools
+  - bedtools
+  - sambamba
+  - subread
+  - pip:
+    - sequana
+
+

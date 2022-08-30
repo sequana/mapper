@@ -21,14 +21,21 @@ This is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.o
 
 Installation
 ~~~~~~~~~~~~
+With a valid Python environemnt, install this pipeline using::
 
-You must install Sequana first (use --upgrade to get the latest version installed)::
-
-    pip install sequana --upgrade
-
-Then, just install this package::
+If you already have all requirements, you can install the packages using pip::
 
     pip install sequana_mapper --upgrade
+
+Otherwise, you can create a *sequana_mapper* conda environment executing::
+
+    conda env create -f environment.yml
+
+and later activate the environment::
+
+  conda activate sequana_mapper
+
+A third option is to install the pipeline with pip method (see above) and use singularity as explained afterwards.
 
 
 Usage
@@ -50,7 +57,7 @@ retrieve the pipeline itself and its configuration files and then execute the pi
 
     snakemake -s mapper.rules -c config.yaml --cores 4 --stats stats.txt
 
-Or use `sequanix <https://sequana.readthedocs.io/en/master/sequanix.html>`_ interface.
+Or use `sequanix <https://sequana.readthedocs.io/en/main/sequanix.html>`_ interface.
 
 Requirements
 ~~~~~~~~~~~~
@@ -65,7 +72,7 @@ This pipelines requires the following executable(s):
 - bowtie2
 - deeptools
 
-.. image:: https://raw.githubusercontent.com/sequana/mapper/master/sequana_pipelines/mapper/dag.png
+.. image:: https://raw.githubusercontent.com/sequana/mapper/main/sequana_pipelines/mapper/dag.png
 
 
 Details
@@ -81,7 +88,7 @@ readtag is set to None.
 Rules and configuration details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Here is the `latest documented configuration file <https://raw.githubusercontent.com/sequana/mapper/master/sequana_pipelines/mapper/config.yaml>`_
+Here is the `latest documented configuration file <https://raw.githubusercontent.com/sequana/mapper/main/sequana_pipelines/mapper/config.yaml>`_
 to be used with the pipeline. Each rule used in the pipeline may have a section in the configuration file. 
 
 
@@ -91,6 +98,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+0.12.0    * Use latest pipetools and add singularity containers
 0.11.1    * Fix typo when setting coverage to True and allow untagged filenames
 0.11.0    * implement feature counts for capture-seq projects
 0.10.1    * remove getlogdir and getname
@@ -122,6 +130,6 @@ Contribute & Code of Conduct
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To contribute to this project, please take a look at the 
-`Contributing Guidelines <https://github.com/sequana/sequana/blob/master/CONTRIBUTING.rst>`_ first. Please note that this project is released with a 
-`Code of Conduct <https://github.com/sequana/sequana/blob/master/CONDUCT.md>`_. By contributing to this project, you agree to abide by its terms.
+`Contributing Guidelines <https://github.com/sequana/sequana/blob/main/CONTRIBUTING.rst>`_ first. Please note that this project is released with a 
+`Code of Conduct <https://github.com/sequana/sequana/blob/main/CONDUCT.md>`_. By contributing to this project, you agree to abide by its terms.
 
