@@ -21,7 +21,6 @@ This is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.o
 
 Installation
 ~~~~~~~~~~~~
-With a valid Python environemnt, install this pipeline using::
 
 If you already have all requirements, you can install the packages using pip::
 
