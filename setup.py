@@ -46,6 +46,7 @@ setup(
     author           = metainfo['authors']['main'][0],
     author_email     = metainfo['authors']['main'][1],
     long_description = open("README.rst").read(),
+    long_description_content_type = "text/x-rst",
     keywords         = metainfo['keywords'],
     description      = metainfo['description'],
     license          = metainfo['license'],
