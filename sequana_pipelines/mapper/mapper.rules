@@ -32,13 +32,23 @@ else:
 sequana_wrapper_branch = "main"
 
 
-__multiqc__input = []
+def get_multiqc_inputs():
+    inputs = []
+    inputs += expand("{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", sample=manager.samples)
+    if config["feature_counts"]["do"]:
+        inputs += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
+    if config["sequana_coverage"]["do"]:
+        inputs += expand("{sample}/sequana_coverage/sequana_coverage.html", sample=manager.samples)
+    if config["general"]["create_bigwig"]:
+        inputs += expand("{sample}/bigwig/{sample}.bw", sample=manager.samples)
+
+    return inputs
 
 rule pipeline:
     input:
         "multiqc/multiqc_report.html",
-        ".sequana/rulegraph.svg",
-        "reference/genome.fasta",
+        ".sequana/rulegraph.svg"
+
 
 reference_file = config['general']['reference_file']
 
@@ -71,7 +81,7 @@ if config['general']['mapper'] == "bwa":
             index_algorithm='is'
         threads: 2
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['bwa']
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bwa/build"
 
@@ -90,7 +100,7 @@ if config['general']['mapper'] == "bwa":
             tmp_directory=config["bwa"]["tmp_directory"]
         threads: 2
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['bwa']
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bwa/align"
 
@@ -107,7 +117,7 @@ elif config['general']['mapper'] == "minimap2":
         params:
             options=config['minimap2']['options']
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['bwa']
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/minimap2"
 
@@ -126,7 +136,7 @@ elif config['general']['mapper'] == "bowtie2":
             threads:
                 config['bowtie2_index']['threads']
             container:
-                "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+                config['apptainers']['bowtie2']
             wrapper:
                 f"{sequana_wrapper_branch}/wrappers/bowtie2/build"
 
@@ -143,11 +153,10 @@ elif config['general']['mapper'] == "bowtie2":
         threads:
             config["bowtie2"]["threads"]
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['bowtie2']
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/bowtie2/align"
 
-__multiqc__input += expand("{sample}/{sample}.sorted.bam", sample=manager.samples)
 
 rule bam_indexing:
     input:
@@ -155,13 +164,13 @@ rule bam_indexing:
     output:
         "{sample}/{sample}.sorted.bam.bai"
     container:
-        "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+        config['apptainers']['bamtools']
     shell:
         """
-        bamtools index -in {input}
+        # switch from bamtools index to samtools index.
+        samtools index {input}
         """
 
-__multiqc__input += expand("{sample}/{sample}.sorted.bam.bai", sample=manager.samples)
 
 # sample should be included at the end of the filename for the multiqc to work
 rule bamtools_stats:
@@ -171,13 +180,12 @@ rule bamtools_stats:
     output:
         "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
     container:
-        "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+        config['apptainers']['bamtools']
     shell:
         """
         bamtools stats -in {input[0]} > {output}
         """
 
-__multiqc__input += expand("{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", sample=manager.samples)
 
 if config["feature_counts"]["do"]:
     rule feature_counts:
@@ -197,11 +205,10 @@ if config["feature_counts"]["do"]:
         log:
             "{sample}/feature_counts/feature_counts.log"
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['subread']
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/feature_counts"
 
-    __multiqc__input += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
 
 # Sequana_coverage analysis
 
@@ -213,7 +220,7 @@ if config["sequana_coverage"]["do"]:
         output:
             "{sample}/bam2cov/{sample}.bed"
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['bedtools']
         shell:
             """
             bedtools genomecov -d -ibam {input} > {output}
@@ -245,7 +252,6 @@ if config["sequana_coverage"]["do"]:
         wrapper:
             f"{sequana_wrapper_branch}/wrappers/sequana_coverage"
 
-    __multiqc__input += expand("{sample}/sequana_coverage/sequana_coverage.html", sample=manager.samples)
 
 
 if config["general"]["create_bigwig"]:
@@ -257,12 +263,11 @@ if config["general"]["create_bigwig"]:
         log:
             "{sample}/bigwig/{sample}.log"
         container:
-            "https://zenodo.org/record/6794508/files/sequana_tools_0.14.1.img"
+            config['apptainers']['deeptools']
         shell:
             """
             bamCoverage --bam {input} --outFileFormat bigwig --outFileName {output} > {log}
             """
-    __multiqc__input += expand("{sample}/bigwig/{sample}.bw", sample=manager.samples)
 
 # ========================================================== multiqc
 
@@ -272,7 +277,7 @@ if manager.config.multiqc.config_file:
 
 rule multiqc:
     input:
-        __multiqc__input
+        get_multiqc_inputs()
     output:
        "multiqc/multiqc_report.html"
     params:
@@ -286,14 +291,32 @@ rule multiqc:
        f"{sequana_wrapper_branch}/wrappers/multiqc"
 
 # ========================================================== rulegraph
-sequana_rulegraph_mapper = {"multiqc": "../multiqc/multiqc_report.html"}
-include: sm.modules['rulegraph']
+rule rulegraph:
+    input: str(manager.snakefile)
+    output:
+        svg = "rulegraph/rulegraph.dot"
+    params:
+        mapper = {"multiqc": "../multiqc/multiqc_report.html"},
+        configname = "config.yaml"
+    wrapper:
+        f"{sequana_wrapper_branch}/wrappers/rulegraph"
+
+
+rule dot2svg:
+    input:
+        "rulegraph/rulegraph.dot"
+    output:
+        ".sequana/rulegraph.svg"
+    container:
+        config['apptainers']['graphviz']
+    shell:
+        """dot -Tsvg {input} -o {output}"""
+
 
 # Those rules takes a couple of seconds so no need for a cluster
 localrules: multiqc, rulegraph
 
 onsuccess:
-    shell("chmod -R g+w .")
 
     from sequana import logger as mylog
     mylog.setLevel("INFO")
@@ -317,9 +340,20 @@ If coverage was selected, you should also have HTML reports for each sample with
 
     if config["sequana_coverage"]["do"]:
         intro += """<h2>Coverage plots overview</h2>"""
-        import glob
+        import glob, shutil
         filenames = glob.glob("*/sequana_coverage/*/coverage.png")
         for count, filename in enumerate(filenames):
+
+            # hack for sequana v0.15.1. copy the image logo in sub-directories
+            # create missing images/ directory and copy logo in it
+            p = Path(filename)
+            (p.parent / 'images').mkdir(exist_ok=True)
+            (p.parent / p.parent.name / 'images').mkdir(exist_ok=True)
+            try:shutil.copy( p.parent / "../images/logo_256x256.png", p.parent / 'images')
+            except shutil.SameFileError: pass
+            try:shutil.copy( p.parent / "../images/logo_256x256.png", p.parent / p.parent.name / 'images')
+            except shutil.SameFileError: pass
+
             parts = filename.split("/")
             image = SummaryModule2.png_to_embedded_png("self_dummy", 
                         filename,
@@ -340,6 +374,8 @@ If coverage was selected, you should also have HTML reports for each sample with
 
     s = SummaryModule2(data, intro=intro)
 
+    shell("chmod -R g+w .")
+    shell("rm -rf rulegraph")   # embedded in report
 
 onerror:
     from sequana_pipetools.errors import PipeError

@@ -52,6 +52,6 @@ jobs:
 
     - name: testing
       run: |
-        sequana_mapper --input-directory test/data/ --use-apptainer && cd mapper && sh mapper.sh
+        sequana_mapper --input-directory test/data/ --reference-file test/data/measles.fa --use-apptainer && cd mapper && sh mapper.sh
 
 

@@ -10,6 +10,14 @@
    :target: https://github.com/sequana/mapper/actions/    
 
 
+.. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
+    :target: https://pypi.python.org/pypi/sequana
+    :alt: Python 3.8 | 3.9 | 3.10
+
+.. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
+   :target: http://joss.theoj.org/papers/10.21105/joss.00352
+   :alt: JOSS (journal of open source software) DOI
+
 This is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.org>`_ projet
 
 :Overview: This is a simple pipeline to map several FastQ files onto a reference using different mappers/aligners
@@ -25,17 +33,6 @@ Installation
 If you already have all requirements, you can install the packages using pip::
 
     pip install sequana_mapper --upgrade
-
-Otherwise, you can create a *sequana_mapper* conda environment executing::
-
-    conda env create -f environment.yml
-
-and later activate the environment::
-
-  conda activate sequana_mapper
-
-A third option is to install the pipeline with pip method (see above) and use singularity as explained afterwards.
-
 
 Usage
 ~~~~~
@@ -54,7 +51,8 @@ to execute the pipeline::
 This launch a snakemake pipeline. If you are familiar with snakemake, you can 
 retrieve the pipeline itself and its configuration files and then execute the pipeline yourself with specific parameters::
 
-    snakemake -s mapper.rules -c config.yaml --cores 4 --stats stats.txt
+    snakemake -s mapper.rules -c config.yaml --cores 4 \
+        --wrapper-prefix https://raw.githubusercontent.com/sequana/sequana-wrappers/
 
 Or use `sequanix <https://sequana.readthedocs.io/en/main/sequanix.html>`_ interface.
 
@@ -77,6 +75,8 @@ This pipelines requires the following executable(s):
 Details
 ~~~~~~~~~
 
+.. image:: https://raw.githubusercontent.com/sequana/mapper/main/sequana_pipelines/mapper/dag.png
+
 This pipeline runs **mapper** in parallel on the input fastq files (paired or not). 
 A brief sequana summary report is also produced. When using **--pacbio** option, 
 *-x map-pb* options is automatically added to the config.yaml file and the
@@ -97,6 +97,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.0.0     * Use latest sequana-wrappers and graphviz apptainer
 0.12.0    * Use latest pipetools and add singularity containers
 0.11.1    * Fix typo when setting coverage to True and allow untagged filenames
 0.11.0    * implement feature counts for capture-seq projects
