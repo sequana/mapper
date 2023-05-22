@@ -12,6 +12,7 @@ dependencies:
   - samtools
   - deeptools
   - bedtools
+  - bamtools
   - sambamba
   - subread
   - pip:
