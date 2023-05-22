@@ -75,8 +75,6 @@ This pipelines requires the following executable(s):
 Details
 ~~~~~~~~~
 
-.. image:: https://raw.githubusercontent.com/sequana/mapper/main/sequana_pipelines/mapper/dag.png
-
 This pipeline runs **mapper** in parallel on the input fastq files (paired or not). 
 A brief sequana summary report is also produced. When using **--pacbio** option, 
 *-x map-pb* options is automatically added to the config.yaml file and the
