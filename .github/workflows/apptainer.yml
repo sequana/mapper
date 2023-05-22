@@ -1,0 +1,57 @@
+name: Apptainer Run
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches-ignore: []
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+      matrix:
+        python: [3.8, 3.9, '3.10']
+      fail-fast: false
+
+
+    steps:
+
+    - name: precleanup
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+    - name: install graphviz
+      run: |
+        sudo apt update
+        sudo apt-get install -y graphviz software-properties-common
+        sudo add-apt-repository -y ppa:apptainer/ppa
+        sudo apt update
+        sudo apt install -y apptainer
+
+    - name: checkout git repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.X
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install dependencies
+      run: |
+        pip install .[testing]
+
+    - name: install package itself
+      run: |
+         pip install .
+
+    - name: testing
+      run: |
+        sequana_mapper --input-directory test/data/ --reference-file test/data/measles.fa --use-apptainer && cd mapper && sh mapper.sh
+
+

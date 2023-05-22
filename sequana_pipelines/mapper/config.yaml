@@ -19,6 +19,17 @@ general:
     annotation_file:
     create_bigwig: false
 
+
+apptainers:
+    graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
+    bwa: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    minimap2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    bowtie2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    bamtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    subread: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    bedtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    deeptools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+
 bwa:
     index_algorithm: is
     options: -T 30 -M

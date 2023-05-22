@@ -13,6 +13,9 @@ mapping:
         type: str
         required: True
 
+    "apptainers":
+        type: any
+
     "general":
         type: map
         mapping:
