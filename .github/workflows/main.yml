@@ -37,8 +37,7 @@ jobs:
             python=${{ matrix.python }}
 
 
-    - name: install package itself
-      shell: bash -l {0}
+    - name: conda
       run: |
         pip install .
 

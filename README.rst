@@ -2,13 +2,8 @@
 .. image:: https://badge.fury.io/py/sequana-mapper.svg
      :target: https://pypi.python.org/pypi/sequana_mapper
 
-.. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
-    :target: http://joss.theoj.org/papers/10.21105/joss.00352
-    :alt: JOSS (journal of open source software) DOI
-
 .. image:: https://github.com/sequana/mapper/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/mapper/actions/    
-
 
 .. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
     :target: https://pypi.python.org/pypi/sequana
@@ -24,8 +19,8 @@ This is the **mapper** pipeline from the `Sequana <https://sequana.readthedocs.o
 :Input: A set of FastQ files (illumina, pacbio, etc).
 :Output: A set of BAM files (and/or bigwig) and HTML report
 :Status: Production
-:Citation: Cokelaer et al, (2017), ‘Sequana’: a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI doi:10.21105/joss.00352
-
+:Documentation: This README file, and https://sequana.readthedocs.io
+:Citation: Cokelaer et al, (2017), 'Sequana': a Set of Snakemake NGS pipelines, Journal of Open Source Software, 2(16), 352, JOSS DOI https://doi:10.21105/joss.00352
 
 Installation
 ~~~~~~~~~~~~
@@ -34,15 +29,18 @@ If you already have all requirements, you can install the packages using pip::
 
     pip install sequana_mapper --upgrade
 
+You will need third-party software such as fastqc. Please see below for details.
+
 Usage
 ~~~~~
 
-::
+This command will scan all files ending in .fastq.gz found in the local
+directory, create a directory called mapper/ where a snakemake pipeline can be executed.::
 
     sequana_mapper --input-directory DATAPATH  --mapper bwa --create-bigwig
     sequana_mapper --input-directory DATAPATH  --mapper bwa --do-coverage
 
-This creates a directory with the pipeline and configuration file. You will then need 
+This creates a directory with the pipeline and configuration file. You will then need
 to execute the pipeline::
 
     cd mapper
@@ -55,6 +53,7 @@ retrieve the pipeline itself and its configuration files and then execute the pi
         --wrapper-prefix https://raw.githubusercontent.com/sequana/sequana-wrappers/
 
 Or use `sequanix <https://sequana.readthedocs.io/en/main/sequanix.html>`_ interface.
+
 
 Requirements
 ~~~~~~~~~~~~
@@ -80,6 +79,9 @@ A brief sequana summary report is also produced. When using **--pacbio** option,
 *-x map-pb* options is automatically added to the config.yaml file and the
 readtag is set to None. 
 
+The BAM files are filtered to remove unmapped reads to keep BAM files to minimal size. However,
+the multiqc and statistics to be found in  {sample}/bamtools_stats/ includes mapped and unmapped reads information. Each BAM file is stored in a directory named after the sample. 
+
 
 
 Rules and configuration details
@@ -95,6 +97,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.1.0     * BAM files are now filtered to remove unmapped reads
+          * set wrappers branch in config file and update pipeline.
 1.0.0     * Use latest sequana-wrappers and graphviz apptainer
 0.12.0    * Use latest pipetools and add singularity containers
 0.11.1    * Fix typo when setting coverage to True and allow untagged filenames
