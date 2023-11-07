@@ -84,7 +84,7 @@ feature_counts:
 #     distance is smaller than this parameter
 #
 sequana_coverage:
-    do: true
+    do: false
     circular: true
     window_size: 20001
     chunksize: 5000000
