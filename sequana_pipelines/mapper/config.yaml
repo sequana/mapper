@@ -6,6 +6,7 @@
 # If input_directory provided, use it otherwise if input_pattern provided,
 # use it, otherwise use input_samples.
 # ============================================================================
+sequana_wrappers: "v0.15.1"
 
 input_directory:
 input_readtag: _R[12]_
@@ -25,7 +26,7 @@ apptainers:
     bwa: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
     minimap2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
     bowtie2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    bamtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    samtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
     subread: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
     bedtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
     deeptools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"

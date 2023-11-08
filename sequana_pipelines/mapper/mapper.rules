@@ -83,7 +83,7 @@ if config['general']['mapper'] == "bwa":
         container:
             config['apptainers']['bwa']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/bwa/build"
+            f"{manager.wrappers}/wrappers/bwa/build"
 
     rule bwa:
         input:
@@ -92,7 +92,7 @@ if config['general']['mapper'] == "bwa":
             fai="reference/genome.fasta.fai",
             reference="reference/genome.fasta"
         output:
-            sorted="{sample}/{sample}.sorted.bam",
+            sorted=temp("{sample}/{sample}.sorted.bam")
         log:
             "{sample}/{sample}.log"
         params:
@@ -102,7 +102,7 @@ if config['general']['mapper'] == "bwa":
         container:
             config['apptainers']['bwa']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/bwa/align"
+            f"{manager.wrappers}/wrappers/bwa/align"
 
 
 elif config['general']['mapper'] == "minimap2":
@@ -111,7 +111,7 @@ elif config['general']['mapper'] == "minimap2":
             fastq=manager.getrawdata(),
             reference="reference/genome.fasta"
         output:
-            "{sample}/{sample}.sorted.bam"
+            sorted=temp("{sample}/{sample}.sorted.bam")
         threads:
             config["minimap2"]["threads"]
         params:
@@ -119,7 +119,7 @@ elif config['general']['mapper'] == "minimap2":
         container:
             config['apptainers']['bwa']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/minimap2"
+            f"{manager.wrappers}/wrappers/minimap2"
 
 elif config['general']['mapper'] == "bowtie2":
     if not os.path.exists("reference/genome.1.bt2"):
@@ -138,14 +138,14 @@ elif config['general']['mapper'] == "bowtie2":
             container:
                 config['apptainers']['bowtie2']
             wrapper:
-                f"{sequana_wrapper_branch}/wrappers/bowtie2/build"
+                f"{manager.wrappers}/wrappers/bowtie2/build"
 
     rule bowtie2:
         input:
             fastq=manager.getrawdata(),
             idx=multiext("reference/genome",".1.bt2",".2.bt2",".3.bt2",".4.bt2",".rev.1.bt2",".rev.2.bt2"),
         output:
-            bam="{sample}/{sample}.sorted.bam",
+            bam=temp("{sample}/{sample}.sorted.bam")
         log:
             "logs/bowtie2/{sample}.log"
         params:
@@ -155,20 +155,36 @@ elif config['general']['mapper'] == "bowtie2":
         container:
             config['apptainers']['bowtie2']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/bowtie2/align"
+            f"{manager.wrappers}/wrappers/bowtie2/align"
 
 
 rule bam_indexing:
     input:
         "{sample}/{sample}.sorted.bam"
     output:
-        "{sample}/{sample}.sorted.bam.bai"
+        temp("{sample}/{sample}.sorted.bam.bai")
     container:
-        config['apptainers']['bamtools']
+        config['apptainers']['samtools']
     shell:
         """
         # switch from bamtools index to samtools index.
         samtools index {input}
+        """
+
+
+rule filtering_bam:
+    input:
+        bam="{sample}/{sample}.sorted.bam",
+        bai="{sample}/{sample}.sorted.bam.bai"
+    output:
+        bam="{sample}/{sample}.filtered.sorted.bam",
+        bai="{sample}/{sample}.filtered.sorted.bam.bai"
+    container:
+        config['apptainers']['samtools']
+    shell:
+        """
+        samtools view -b -F 4 {input.bam} > {output.bam}
+        samtools index {output.bam}
         """
 
 
@@ -180,7 +196,7 @@ rule bamtools_stats:
     output:
         "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
     container:
-        config['apptainers']['bamtools']
+        config['apptainers']['samtools']
     shell:
         """
         bamtools stats -in {input[0]} > {output}
@@ -190,7 +206,7 @@ rule bamtools_stats:
 if config["feature_counts"]["do"]:
     rule feature_counts:
         input:
-            bam="{sample}/{sample}.sorted.bam",
+            bam="{sample}/{sample}.filtered.sorted.bam",
             gff=config["feature_counts"]["gff"]
         output:
             counts="{sample}/feature_counts/{sample}_feature.out",
@@ -207,7 +223,7 @@ if config["feature_counts"]["do"]:
         container:
             config['apptainers']['subread']
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/feature_counts"
+            f"{manager.wrappers}/wrappers/feature_counts"
 
 
 # Sequana_coverage analysis
@@ -216,7 +232,7 @@ if config["sequana_coverage"]["do"]:
 
     rule bam2cov:
         input:
-            "{sample}/{sample}.sorted.bam",
+            "{sample}/{sample}.filtered.sorted.bam",
         output:
             "{sample}/bam2cov/{sample}.bed"
         container:
@@ -250,14 +266,14 @@ if config["sequana_coverage"]["do"]:
             low_threshold=config["sequana_coverage"]["low_threshold"],
             mixture_models=config["sequana_coverage"]["mixture_models"]
         wrapper:
-            f"{sequana_wrapper_branch}/wrappers/sequana_coverage"
+            f"{manager.wrappers}/wrappers/sequana_coverage"
 
 
 
 if config["general"]["create_bigwig"]:
     rule bam2bigwig:
         input:
-            "{sample}/{sample}.sorted.bam"
+            "{sample}/{sample}.filtered.sorted.bam",
         output:
             "{sample}/bigwig/{sample}.bw"
         log:
@@ -288,7 +304,7 @@ rule multiqc:
     log:
         "multiqc/multiqc.log"
     wrapper:
-       f"{sequana_wrapper_branch}/wrappers/multiqc"
+       f"{manager.wrappers}/wrappers/multiqc"
 
 # ========================================================== rulegraph
 rule rulegraph:
@@ -299,7 +315,7 @@ rule rulegraph:
         mapper = {"multiqc": "../multiqc/multiqc_report.html"},
         configname = "config.yaml"
     wrapper:
-        f"{sequana_wrapper_branch}/wrappers/rulegraph"
+        f"{manager.wrappers}/wrappers/rulegraph"
 
 
 rule dot2svg:
@@ -334,9 +350,37 @@ onsuccess:
 
 
     intro = """<h2>Overview</h2>
-This pipeline mapper the different samples on the provided reference. 
+The mapper pipeline maps the different samples on the provided reference.
 A <a href="multiqc/multiqc_report.html">multiqc report</a> is available. Here below are the details of the pipeline (parameters) together with summary plots.
-If coverage was selected, you should also have HTML reports for each sample with its coverage."""
+If coverage was selected, you should also have HTML reports for each sample with its coverage.
+
+<h2>Mapped reads</h2>
+"""
+
+    from sequana.viz import BinaryPercentage
+    from plotly import offline
+    import pandas as pd
+
+    hb = BinaryPercentage()
+    for sample in manager.samples:
+        totals = []
+        mapped = []
+
+        with open(f"{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", "r") as fin:
+            for line in fin.readlines():
+                if line.startswith("Total reads"):
+                    totals.append(int(line.split("Total reads:")[1].strip()))
+                if line.startswith("Mapped reads"):
+                    mapped.append(int(line.split("Mapped reads:")[1].split()[0].strip()))
+        mapped = [x / total * 100 for x,total in zip(mapped, totals)]
+        unmapped = [100 - x for x in mapped]
+    df = pd.DataFrame({'mapped': mapped, 'unmapped': unmapped}, index=manager.samples)
+    hb.df = df
+    
+    fig = hb.plot_horizontal_bar(html_code=True,
+        colors=['#120946', '#389f1f']
+            )
+    intro += offline.plot(fig, output_type="div", include_plotlyjs=True)
 
     if config["sequana_coverage"]["do"]:
         intro += """<h2>Coverage plots overview</h2>"""
@@ -357,7 +401,6 @@ If coverage was selected, you should also have HTML reports for each sample with
             parts = filename.split("/")
             image = SummaryModule2.png_to_embedded_png("self_dummy", 
                         filename,
-                        #style="align:center; width:30%; height:30%",
                         style="align:center; width:95%; height:95%",
                         alt=parts[0])
             parts = filename.split("/")
