@@ -3,6 +3,9 @@
 
 type: map
 mapping:
+    "sequana_wrappers":
+        type: str
+        required: true
     "input_directory":
         type: str
         required: True

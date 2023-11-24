@@ -12,140 +12,105 @@
 ##############################################################################
 import sys
 import os
-import argparse
-import subprocess
 
-from sequana_pipetools.options import *
-from sequana_pipetools.options import before_pipeline
-from sequana_pipetools.misc import Colors
-from sequana_pipetools.info import sequana_epilog, sequana_prolog
-from sequana_pipetools import SequanaManager
+import rich_click as click
+import click_completion
 
-col = Colors()
+click_completion.init()
 
 NAME = "mapper"
 
+from sequana_pipetools.options import *
+from sequana_pipetools import SequanaManager
 
-class Options(argparse.ArgumentParser):
-    def __init__(self, prog=NAME, epilog=None):
-        usage = col.purple(sequana_prolog.format(**{"name": NAME}))
-        super(Options, self).__init__(
-            usage=usage,
-            prog=prog,
-            description="",
-            epilog=epilog,
-            formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        )
-        # add a new group of options to the parser
-        so = SlurmOptions()
-        so.add_options(self)
-
-        # add a snakemake group of options to the parser
-        so = SnakemakeOptions(working_directory=NAME)
-        so.add_options(self)
-
-        so = InputOptions()
-        so.add_options(self)
-
-        so = GeneralOptions()
-        so.add_options(self)
-
-        pipeline_group = self.add_argument_group("pipeline")
-        pipeline_group.add_argument(
-            "--mapper", default="bwa", choices=["bwa", "minimap2", "bowtie2"], help="Choose one of the valid mapper"
-        )
-        pipeline_group.add_argument("--reference-file", required=True, help="You input reference file in fasta format")
-        pipeline_group.add_argument("--annotation-file", help="Used by the sequana_coverage tool if provided")
-
-        pipeline_group.add_argument("--do-coverage", action="store_true", help="Use sequana_coverage (prokaryotes)")
-
-        pipeline_group.add_argument(
+help = init_click(
+    NAME,
+    groups={
+        "Pipeline Specific": [
+            "--mapper",
+            "--reference-file",
+            "--annotation-file",
+            "--do-coverage",
             "--pacbio",
-            action="store_true",
-            help="If set, automatically set the input-readtag to None and set minimap2 options to -x map-pb",
-        )
-
-        pipeline_group.add_argument(
-            "--create-bigwig", action="store_true", help="create the bigwig files from the BAM files"
-        )
-        pipeline_group.add_argument(
+            "--create-bigwig",
             "--capture-annotation-file",
-            help="SAF formatted file for capture efficiency calculation with featureCounts.",
-        )
-
-        self.add_argument("--run", default=False, action="store_true", help="execute the pipeline directly")
-
-    def parse_args(self, *args):
-        args_list = list(*args)
-        if "--from-project" in args_list:
-            if len(args_list) > 2:
-                msg = (
-                    "WARNING [sequana]: With --from-project option, "
-                    + "pipeline and data-related options will be ignored."
-                )
-                print(col.error(msg))
-            for action in self._actions:
-                if action.required is True:
-                    action.required = False
-        options = super(Options, self).parse_args(*args)
-        return options
+        ],
+    },
+)
 
 
-def main(args=None):
-
-    if args is None:
-        args = sys.argv
-
-    # whatever needs to be called by all pipeline before the options parsing
-    before_pipeline(NAME)
-
-    # option parsing including common epilog
-    options = Options(NAME, epilog=sequana_epilog).parse_args(args[1:])
-
+@click.command(context_settings=help)
+@include_options_from(ClickSnakemakeOptions, working_directory=NAME)
+@include_options_from(ClickSlurmOptions)
+@include_options_from(ClickInputOptions)
+@include_options_from(ClickGeneralOptions)
+@click.option(
+    "--mapper", default="bwa", type=click.Choice(["bwa", "minimap2", "bowtie2"]), help="Choose one of the valid mapper"
+)
+@click.option("--reference-file", required=True, help="You input reference file in fasta format")
+@click.option("--annotation-file", help="Used by the sequana_coverage tool if provided")
+@click.option("--do-coverage", is_flag=True, help="Use sequana_coverage (prokaryotes)")
+@click.option(
+    "--pacbio",
+    is_flag=True,
+    help="If set, automatically set the input-readtag to None and set minimap2 options to -x map-pb",
+)
+@click.option(
+    "--nanopore",
+    is_flag=True,
+    help="If set, automatically set the input-readtag to None and set minimap2 options to -x map-ont",
+)
+@click.option("--create-bigwig", is_flag=True, help="create the bigwig files from the BAM files")
+@click.option(
+    "--capture-annotation-file",
+    type=click.Path(),
+    help="SAF formatted file for capture efficiency calculation with featureCounts.",
+)
+def main(**options):
     # the real stuff is here
     manager = SequanaManager(options, NAME)
+    options = manager.options
 
-    # create the beginning of the command and the working directory
+    # creates the working directory
     manager.setup()
 
-    # fill the config file with input parameters
-    if options.from_project is None:
-        cfg = manager.config.config
+    cfg = manager.config.config
 
-        # --------------------------------------------------- input  section
-        cfg.input_directory = os.path.abspath(options.input_directory)
-        cfg.input_pattern = options.input_pattern
-        cfg.input_readtag = options.input_readtag
+    # --------------------------------------------------- input  section
+    cfg.input_directory = os.path.abspath(options.input_directory)
+    cfg.input_pattern = options.input_pattern
+    cfg.input_readtag = options.input_readtag
 
-        cfg.general.mapper = options.mapper
-        cfg.general.reference_file = os.path.abspath(options.reference_file)
-        manager.exists(cfg.general.reference_file)
+    cfg.general.mapper = options.mapper
+    cfg.general.reference_file = os.path.abspath(options.reference_file)
+    manager.exists(cfg.general.reference_file)
 
-        if options.annotation_file:
-            cfg.general.annotation_file = os.path.abspath(options.annotation_file)
-            manager.exists(cfg.general.annotation_file)
+    if options.annotation_file:
+        cfg.general.annotation_file = os.path.abspath(options.annotation_file)
+        manager.exists(cfg.general.annotation_file)
 
-        if options.do_coverage:
-            cfg.sequana_coverage.do = True
+    if options.do_coverage:
+        cfg.sequana_coverage.do = True
 
-        if options.create_bigwig:
-            cfg.general.create_bigwig = True
+    if options.create_bigwig:
+        cfg.general.create_bigwig = True
 
-        if options.pacbio:
-            cfg.minimap2.options = " -x map-pb "
-            cfg.input_readtag = ""
+    if options.pacbio:
+        cfg.minimap2.options = " -x map-pb "
+        cfg.input_readtag = ""
 
-        if options.capture_annotation_file:
-            cfg.feature_counts.do = True
-            cfg.feature_counts.options = "-F SAF "
-            cfg.feature_counts.gff = os.path.abspath(options.capture_annotation_file)
+    if options.nanopore:
+        cfg.minimap2.options = " -x map-ont "
+        cfg.input_readtag = ""
+
+    if options.capture_annotation_file:
+        cfg.feature_counts.do = True
+        cfg.feature_counts.options = "-F SAF "
+        cfg.feature_counts.gff = os.path.abspath(options.capture_annotation_file)
 
     # finalise the command and save it; copy the snakemake. update the config
     # file and save it.
     manager.teardown()
-
-    if options.run:
-        subprocess.Popen(["sh", "{}.sh".format(NAME)], cwd=options.workdir)
 
 
 if __name__ == "__main__":

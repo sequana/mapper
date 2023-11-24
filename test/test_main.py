@@ -1,8 +1,13 @@
-import easydev
 import os
 import tempfile
 import subprocess
 import sys
+
+
+from sequana_pipelines.mapper.main import main
+
+from click.testing import CliRunner
+
 
 from . import test_dir
 
@@ -20,10 +25,9 @@ def test_standalone_subprocess():
 
 def test_standalone_script():
     directory = tempfile.TemporaryDirectory()
-    import sequana_pipelines.mapper.main as m
 
-    sys.argv = [
-        "test",
+    runner = CliRunner()
+    results = runner.invoke(main, [
         "--input-directory",
         sharedir,
         "--reference-file",
@@ -31,16 +35,14 @@ def test_standalone_script():
         "--working-directory",
         directory.name,
         "--force",
-    ]
-    m.main()
+    ])
+    assert results.exit_code == 0
 
 
 def test_standalone_script_minimap2():
     directory = tempfile.TemporaryDirectory()
-    import sequana_pipelines.mapper.main as m
-
-    sys.argv = [
-        "test",
+    runner = CliRunner()
+    results = runner.invoke(main, [
         "--input-directory",
         sharedir,
         "--reference-file",
@@ -50,15 +52,14 @@ def test_standalone_script_minimap2():
         "--force",
         "--mapper",
         "minimap2",
-    ]
-    m.main()
+    ])
+    assert results.exit_code == 0
 
-def test_standalone_script_saf():
+def test_standalone_script_saf(tmpdir):
     directory = tempfile.TemporaryDirectory()
-    import sequana_pipelines.mapper.main as m
 
-    sys.argv = [
-        "test",
+    runner = CliRunner()
+    results = runner.invoke(main, [
         "--input-directory",
         sharedir,
         "--reference-file",
@@ -68,8 +69,8 @@ def test_standalone_script_saf():
         "--force",
         "--capture-annotation-file", 
         sharedir + "/test.saf",
-    ]
-    m.main()
+    ])
+    assert results.exit_code == 0
 
 
 

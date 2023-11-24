@@ -1,0 +1,9 @@
+bamtools
+bedtools
+bowtie2
+bwa
+deeptools
+featureCounts
+minimap2
+sambamba
+samtools
