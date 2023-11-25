@@ -25,7 +25,6 @@ configfile: "config.yaml"
 manager = PipelineManager("mapper", config)
 
 
-
 def get_multiqc_inputs():
     inputs = []
     inputs += expand("{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", sample=manager.samples)
@@ -128,7 +127,7 @@ elif config['general']['mapper'] == "bowtie2":
                 multiext("reference/genome", ".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", ".rev.1.bt2", ".rev.2.bt2"),
 
             log:
-                "logs/indexing/bowtie2_genome.log"
+                "logs/bowtie2_indexing/bowtie2_genome.log"
             params:
                 options=config["bowtie2_index"]["options"]
             threads:
@@ -158,6 +157,9 @@ elif config['general']['mapper'] == "bowtie2":
             config['apptainers']['bowtie2']
         wrapper:
             f"{manager.wrappers}/wrappers/bowtie2/align"
+else:
+    mapper = config['general']['mapper']
+    raise ValueError(f"mapper tool must be set to bwa, bowtie2 or minimap2. You provided {mapper}")
 
 
 rule bam_indexing:
@@ -271,8 +273,8 @@ if config["sequana_coverage"]["do"]:
 
     rule double_bed:
         input:
-            bed1="{sample}/samtools_depth/{sample}.bed",
-            bed2="{sample}/bedtools_depth/{sample}.bed"
+            bed1="{sample}/bedtools_depth/{sample}.bed",
+            bed2="{sample}/samtools_depth/{sample}.bed"
         output:
             "{sample}/double_bed/{sample}.bed"
         run:
@@ -312,7 +314,7 @@ if config["sequana_coverage"]["do"]:
             window_size=config["sequana_coverage"]["window_size"],
             output_directory="{sample}/sequana_coverage"
         log:
-            "logs/{sample}_sequana_coverage.log"
+            "logs/sequana_coverage/{sample}_sequana_coverage.log"
         #container:
         #    config["apptainers"]["sequana_coverage"]
         resources:
@@ -325,7 +327,7 @@ if config["sequana_coverage"]["do"]:
 if config["general"]["create_bigwig"]:
     rule bam2bigwig:
         input:
-            "{sample}/{sample}.filtered.sorted.bam",
+            "{sample}/{sample}.filtered.sorted.bam"
         output:
             "{sample}/bigwig/{sample}.bw"
         log:
@@ -392,6 +394,11 @@ localrules: multiqc, rulegraph
 
 onsuccess:
 
+    import glob, shutil
+
+    from plotly import offline
+    import pandas as pd
+
     from sequana import SequanaReport
     from sequana import logger as mylog
     from sequana.viz import BinaryPercentage
@@ -411,22 +418,21 @@ If coverage was selected, you should also have HTML reports for each sample with
 <h2>Mapped reads</h2>
 """
 
-    from plotly import offline
-    import pandas as pd
-
+    # Plot of mapped/unmapped
     hb = BinaryPercentage()
+    totals = []
+    mapped = []
     for sample in manager.samples:
-        totals = []
-        mapped = []
-
         with open(f"{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", "r") as fin:
             for line in fin.readlines():
                 if line.startswith("Total reads"):
-                    totals.append(int(line.split("Total reads:")[1].strip()))
+                    total = int(line.split("Total reads:")[1].strip())
+                    totals.append(total)
                 if line.startswith("Mapped reads"):
-                    mapped.append(int(line.split("Mapped reads:")[1].split()[0].strip()))
-        mapped = [x / total * 100 for x,total in zip(mapped, totals)]
-        unmapped = [100 - x for x in mapped]
+                    mapped_reads = int(line.split("Mapped reads:")[1].split()[0].strip())
+                    mapped.append(mapped_reads)
+    mapped = [x / total * 100 for x,total in zip(mapped, totals)]
+    unmapped = [100 - x for x in mapped]
     df = pd.DataFrame({'mapped': mapped, 'unmapped': unmapped}, index=manager.samples)
     hb.df = df
 
@@ -435,21 +441,13 @@ If coverage was selected, you should also have HTML reports for each sample with
             )
     intro += offline.plot(fig, output_type="div", include_plotlyjs=True)
 
+    # plot of coverage
     if config["sequana_coverage"]["do"]:
         intro += """<h2>Coverage plots overview</h2>"""
-        import glob, shutil
         filenames = glob.glob("*/sequana_coverage/*/coverage.png")
         for count, filename in enumerate(filenames):
 
-            # hack for sequana v0.15.1. copy the image logo in sub-directories
-            # create missing images/ directory and copy logo in it
             p = Path(filename)
-            (p.parent / 'images').mkdir(exist_ok=True)
-            (p.parent / p.parent.name / 'images').mkdir(exist_ok=True)
-            try:shutil.copy( p.parent / "../images/logo_256x256.png", p.parent / 'images')
-            except shutil.SameFileError: pass
-            try:shutil.copy( p.parent / "../images/logo_256x256.png", p.parent / p.parent.name / 'images')
-            except shutil.SameFileError: pass
 
             parts = filename.split("/")
             image = SequanaReport.png_to_embedded_png("self_dummy", 
