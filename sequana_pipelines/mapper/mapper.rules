@@ -14,22 +14,15 @@
 """Mappper pipeline"""
 import os
 
-import sequana
 
-from sequana_pipetools import snaketools as sm
+from sequana_pipetools import PipelineManager
 
 # This must be defined before the include
 configfile: "config.yaml"
 
 
 # A convenient manager
-if config['input_readtag']:
-    manager = sm.PipelineManager("mapper", config)
-else:
-    manager = sm.PipelineManager("mapper", config, fastq=False)
-
-
-sequana_wrapper_branch = "main"
+manager = PipelineManager("mapper", config)
 
 
 def get_multiqc_inputs():
@@ -51,6 +44,7 @@ rule pipeline:
 
 
 reference_file = config['general']['reference_file']
+annotation_file = config['general']['annotation_file']
 
 
 rule copy_reference:
@@ -60,9 +54,6 @@ rule copy_reference:
         """
         cp {input} {output}
         """
-
-
-annotation_file = config['general']['annotation_file']
 
 
 if config['general']['mapper'] == "bwa":
@@ -80,6 +71,8 @@ if config['general']['mapper'] == "bwa":
             options="",
             index_algorithm='is'
         threads: 2
+        resources:
+            **config["bwa_index"]["resources"]
         container:
             config['apptainers']['bwa']
         wrapper:
@@ -99,6 +92,8 @@ if config['general']['mapper'] == "bwa":
             options=config["bwa"]["options"],
             tmp_directory=config["bwa"]["tmp_directory"]
         threads: 2
+        resources:
+            **config["bwa"]["resources"]
         container:
             config['apptainers']['bwa']
         wrapper:
@@ -117,7 +112,9 @@ elif config['general']['mapper'] == "minimap2":
         params:
             options=config['minimap2']['options']
         container:
-            config['apptainers']['bwa']
+            config['apptainers']['minimap2']
+        resources:
+            **config["minimap2"]["resources"]
         wrapper:
             f"{manager.wrappers}/wrappers/minimap2"
 
@@ -130,11 +127,13 @@ elif config['general']['mapper'] == "bowtie2":
                 multiext("reference/genome", ".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", ".rev.1.bt2", ".rev.2.bt2"),
 
             log:
-                "logs/indexing/bowtie2_genome.log"
+                "logs/bowtie2_indexing/bowtie2_genome.log"
             params:
                 options=config["bowtie2_index"]["options"]
             threads:
                 config['bowtie2_index']['threads']
+            resources:
+                **config["bowtie2_index"]["resources"]
             container:
                 config['apptainers']['bowtie2']
             wrapper:
@@ -152,10 +151,15 @@ elif config['general']['mapper'] == "bowtie2":
             options=config["bowtie2"]["options"]
         threads:
             config["bowtie2"]["threads"]
+        resources:
+            **config["bowtie2"]["resources"]
         container:
             config['apptainers']['bowtie2']
         wrapper:
             f"{manager.wrappers}/wrappers/bowtie2/align"
+else:
+    mapper = config['general']['mapper']
+    raise ValueError(f"mapper tool must be set to bwa, bowtie2 or minimap2. You provided {mapper}")
 
 
 rule bam_indexing:
@@ -179,6 +183,8 @@ rule filtering_bam:
     output:
         bam="{sample}/{sample}.filtered.sorted.bam",
         bai="{sample}/{sample}.filtered.sorted.bam.bai"
+    resources:
+        **config["filtering_bam"]["resources"]
     container:
         config['apptainers']['samtools']
     shell:
@@ -196,11 +202,11 @@ rule bamtools_stats:
     output:
         "{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt"
     container:
-        config['apptainers']['samtools']
-    shell:
-        """
-        bamtools stats -in {input[0]} > {output}
-        """
+        config['apptainers']['bamtools']
+    resources:
+        **config["bamtools_stats"]["resources"]
+    wrapper:
+        f"{manager.wrappers}/wrappers/bamtools/stats"
 
 
 if config["feature_counts"]["do"]:
@@ -220,6 +226,8 @@ if config["feature_counts"]["do"]:
             config["feature_counts"]['threads']
         log:
             "{sample}/feature_counts/feature_counts.log"
+        resources:
+            **config["feature_counts"]["resources"]
         container:
             config['apptainers']['subread']
         wrapper:
@@ -230,11 +238,15 @@ if config["feature_counts"]["do"]:
 
 if config["sequana_coverage"]["do"]:
 
-    rule bam2cov:
+    rule bedtools_depth:
         input:
             "{sample}/{sample}.filtered.sorted.bam",
         output:
-            "{sample}/bam2cov/{sample}.bed"
+            "{sample}/bedtools_depth/{sample}.bed"
+        log:
+            "{sample}/bedtools_depth/{sample}.log"
+        resources:
+            **config["sequana_coverage"]["resources"]
         container:
             config['apptainers']['bedtools']
         shell:
@@ -242,9 +254,42 @@ if config["sequana_coverage"]["do"]:
             bedtools genomecov -d -ibam {input} > {output}
             """
 
+    rule samtools_depth:
+        input:
+            "{sample}/{sample}.filtered.sorted.bam",
+        output:
+            "{sample}/samtools_depth/{sample}.bed"
+        log:
+            "{sample}/samtools_depth/{sample}.log"
+        params:
+            # change -m to higher value would you have a large coverage
+            options="-m " + str(config['samtools_depth'].get("max_depth", 20000))
+        resources:
+            **config["samtools_depth"]["resources"]
+        container:
+            config['apptainers']['samtools']
+        wrapper:
+            f"{manager.wrappers}/wrappers/samtools_depth"
+
+    rule double_bed:
+        input:
+            bed1="{sample}/bedtools_depth/{sample}.bed",
+            bed2="{sample}/samtools_depth/{sample}.bed"
+        output:
+            "{sample}/double_bed/{sample}.bed"
+        run:
+            with open(input.bed1) as fin1, open(input.bed2) as fin2, open(output[0], "w") as fout:
+                for line1, line2 in zip(fin1, fin2):
+                    name1, pos1, count1 = line1.split()
+                    name2, pos2, count2 = line2.split()
+                    assert name1==name2
+                    assert pos1==pos2
+                    fout.write(f"{name1}\t{pos1}\t{count1}\t{count2}\n")
+
+
     def get_sequana_coverage_input(config):
         input_file = {
-            "bed": "{sample}/bam2cov/{sample}.bed",
+            "bed": "{sample}/double_bed/{sample}.bed",
             "fasta": reference_file
         }
         if config["general"]["annotation_file"]:
@@ -257,14 +302,23 @@ if config["sequana_coverage"]["do"]:
         output:
             "{sample}/sequana_coverage/sequana_coverage.html"
         params:
+            annotation=config["general"]["annotation_file"],
             circular=config["sequana_coverage"]["circular"],
-            window_size=config["sequana_coverage"]["window_size"],
             chunksize=config["sequana_coverage"]["chunksize"],
             double_threshold=config["sequana_coverage"]["double_threshold"],
             gc_window_size=config["sequana_coverage"]["gc_window_size"],
             high_threshold=config["sequana_coverage"]["high_threshold"],
             low_threshold=config["sequana_coverage"]["low_threshold"],
-            mixture_models=config["sequana_coverage"]["mixture_models"]
+            mixture_models=config["sequana_coverage"]["mixture_models"],
+            options=config["sequana_coverage"]["options"],
+            window_size=config["sequana_coverage"]["window_size"],
+            output_directory="{sample}/sequana_coverage"
+        log:
+            "logs/sequana_coverage/{sample}_sequana_coverage.log"
+        container:
+            config["apptainers"]["sequana_coverage"]
+        resources:
+            **config["sequana_coverage"]["resources"]
         wrapper:
             f"{manager.wrappers}/wrappers/sequana_coverage"
 
@@ -273,11 +327,13 @@ if config["sequana_coverage"]["do"]:
 if config["general"]["create_bigwig"]:
     rule bam2bigwig:
         input:
-            "{sample}/{sample}.filtered.sorted.bam",
+            "{sample}/{sample}.filtered.sorted.bam"
         output:
             "{sample}/bigwig/{sample}.bw"
         log:
             "{sample}/bigwig/{sample}.log"
+        resources:
+            **config["bam2bigwig"]["resources"]
         container:
             config['apptainers']['deeptools']
         shell:
@@ -303,6 +359,10 @@ rule multiqc:
         modules=config['multiqc']['modules']
     log:
         "multiqc/multiqc.log"
+    resources:
+        **config["multiqc"]["resources"]
+    container:
+        config["apptainers"]["multiqc"]
     wrapper:
        f"{manager.wrappers}/wrappers/multiqc"
 
@@ -334,19 +394,20 @@ localrules: multiqc, rulegraph
 
 onsuccess:
 
+    import glob, shutil
+
+    from plotly import offline
+    import pandas as pd
+
+    from sequana import SequanaReport
     from sequana import logger as mylog
+    from sequana.viz import BinaryPercentage
+
     mylog.setLevel("INFO")
 
-    # This should create the stats plot and the Makefile
+    #
     manager.teardown()
-    manager.clean_multiqc("multiqc/multiqc_report.html")
-
-
-    from sequana_pipelines.mapper import version as mapper_version
-    data = {"name": "mapper",
-            "rulegraph": ".sequana/rulegraph.svg",
-            "pipeline_version": mapper_version}
-    from sequana.modules_report.summary import SummaryModule2
+    manager.clean_multiqc(rules.multiqc.output[0])
 
 
     intro = """<h2>Overview</h2>
@@ -357,49 +418,39 @@ If coverage was selected, you should also have HTML reports for each sample with
 <h2>Mapped reads</h2>
 """
 
-    from sequana.viz import BinaryPercentage
-    from plotly import offline
-    import pandas as pd
-
+    # Plot of mapped/unmapped
     hb = BinaryPercentage()
+    totals = []
+    mapped = []
     for sample in manager.samples:
-        totals = []
-        mapped = []
-
         with open(f"{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", "r") as fin:
             for line in fin.readlines():
                 if line.startswith("Total reads"):
-                    totals.append(int(line.split("Total reads:")[1].strip()))
+                    total = int(line.split("Total reads:")[1].strip())
+                    totals.append(total)
                 if line.startswith("Mapped reads"):
-                    mapped.append(int(line.split("Mapped reads:")[1].split()[0].strip()))
-        mapped = [x / total * 100 for x,total in zip(mapped, totals)]
-        unmapped = [100 - x for x in mapped]
+                    mapped_reads = int(line.split("Mapped reads:")[1].split()[0].strip())
+                    mapped.append(mapped_reads)
+    mapped = [x / total * 100 for x,total in zip(mapped, totals)]
+    unmapped = [100 - x for x in mapped]
     df = pd.DataFrame({'mapped': mapped, 'unmapped': unmapped}, index=manager.samples)
     hb.df = df
-    
+
     fig = hb.plot_horizontal_bar(html_code=True,
         colors=['#120946', '#389f1f']
             )
     intro += offline.plot(fig, output_type="div", include_plotlyjs=True)
 
+    # plot of coverage
     if config["sequana_coverage"]["do"]:
         intro += """<h2>Coverage plots overview</h2>"""
-        import glob, shutil
         filenames = glob.glob("*/sequana_coverage/*/coverage.png")
         for count, filename in enumerate(filenames):
 
-            # hack for sequana v0.15.1. copy the image logo in sub-directories
-            # create missing images/ directory and copy logo in it
             p = Path(filename)
-            (p.parent / 'images').mkdir(exist_ok=True)
-            (p.parent / p.parent.name / 'images').mkdir(exist_ok=True)
-            try:shutil.copy( p.parent / "../images/logo_256x256.png", p.parent / 'images')
-            except shutil.SameFileError: pass
-            try:shutil.copy( p.parent / "../images/logo_256x256.png", p.parent / p.parent.name / 'images')
-            except shutil.SameFileError: pass
 
             parts = filename.split("/")
-            image = SummaryModule2.png_to_embedded_png("self_dummy", 
+            image = SequanaReport.png_to_embedded_png("self_dummy", 
                         filename,
                         style="align:center; width:95%; height:95%",
                         alt=parts[0])
@@ -415,13 +466,13 @@ If coverage was selected, you should also have HTML reports for each sample with
                 break
 
 
-    s = SummaryModule2(data, intro=intro)
+    data = manager.getmetadata()
+    s = SequanaReport(data, intro=intro)
 
     shell("chmod -R g+w .")
     shell("rm -rf rulegraph")   # embedded in report
 
 onerror:
-    from sequana_pipetools.errors import PipeError
-    p = PipeError("mapper")
-    p.status()
+    manager.onerror()
+
 

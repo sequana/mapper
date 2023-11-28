@@ -3,6 +3,9 @@
 
 type: map
 mapping:
+    "sequana_wrappers":
+        type: str
+        required: true
     "input_directory":
         type: str
         required: True
@@ -40,6 +43,11 @@ mapping:
                 type: int 
             "tmp_directory":
                 type: str 
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "multiqc":
         type: map
@@ -52,6 +60,11 @@ mapping:
                 type: str
             "input_directory":
                 type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "minimap2": 
         type: map
@@ -61,6 +74,11 @@ mapping:
             "threads": 
                 type: int
                 range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "sequana_coverage":
         type: map
@@ -111,6 +129,13 @@ mapping:
             "gc_window_size":
                 type: int
                 range: { min: 2}
+            "options":
+              type: str
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "bowtie2":
         type: map
@@ -120,6 +145,11 @@ mapping:
             "threads": 
                 type: int
                 range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "bowtie2_index":
         type: map
@@ -129,6 +159,11 @@ mapping:
             "threads": 
                 type: int
                 range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "bwa_index":
         type: map
@@ -138,6 +173,11 @@ mapping:
             "threads": 
                 type: int
                 range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
     "feature_counts":
         type: map
@@ -155,4 +195,54 @@ mapping:
             "threads":
                 type: int
                 range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
 
+    "samtools_depth":
+        type: map
+        mapping:
+            "max_depth":
+                type: int
+                range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
+    "bam_indexing":
+        type: map
+        mapping:
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
+    "bam2bigwig":
+        type: map
+        mapping:
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
+
+    "bamtools_stats":
+        type: map
+        mapping:
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
+
+    "filtering_bam":
+        type: map
+        mapping:
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str

@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+  workflow_dispatch:
   pull_request:
     branches-ignore: []
   schedule:
@@ -37,7 +38,8 @@ jobs:
             python=${{ matrix.python }}
 
 
-    - name: conda
+    - name: install package itself
+      shell: bash -l {0}
       run: |
         pip install .
 

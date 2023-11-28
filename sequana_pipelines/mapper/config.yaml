@@ -6,7 +6,7 @@
 # If input_directory provided, use it otherwise if input_pattern provided,
 # use it, otherwise use input_samples.
 # ============================================================================
-sequana_wrappers: "v0.15.1"
+sequana_wrappers: v23.11.18
 
 input_directory:
 input_readtag: _R[12]_
@@ -16,50 +16,96 @@ input_pattern: '*fastq.gz'
 #
 general:
     mapper: bwa
-    reference_file:
-    annotation_file:
+    reference_file: ""
+    annotation_file: ""
     create_bigwig: false
 
 
 apptainers:
-    graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
-    bwa: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    minimap2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    bowtie2: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    samtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    subread: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    bedtools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
-    deeptools: "https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img"
+    bamtools: https://zenodo.org/record/10211475/files/bamtools_2.5.2.img
+    bedtools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    bowtie2: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    bwa: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    deeptools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    graphviz: https://zenodo.org/record/7928262/files/graphviz_7.0.5.img
+    minimap2: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    multiqc: https://zenodo.org/record/10205070/files/multiqc_1.16.0.img
+    samtools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    sequana_coverage: https://zenodo.org/record/10209929/files/sequana_0.16.1.img
+    subread: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+
+
+
+##############################################################################
+# samtools_depth
+#
+# :Parameters:
+#
+# - max_depth: by default max depth is 20,000 but can be changed here
+samtools_depth:
+    max_depth: 20000
+    resources:
+        mem: 8G
+
+bam_indexing:
+    resources:
+        mem: 8G
+
+bam2bigwig:
+    resources:
+        mem: 8G
+
+filtering_bam:
+    resources:
+        mem: 8G
+
 
 bwa:
     index_algorithm: is
     options: -T 30 -M
     threads: 4
     tmp_directory: ./tmp
+    resources:
+        mem: 8G
 
 minimap2:
     options: ''
     threads: 4
+    resources:
+        mem: 8G
 
 bowtie2:
     options: ''
     threads: 4
+    resources:
+        mem: 8G
 
 bowtie2_index:
     options: ''
     threads: 4
+    resources:
+        mem: 8G
 
 bwa_index:
     options: ''
     threads: 4
+    resources:
+        mem: 8G
+
+bamtools_stats:
+    resources:
+        mem: 8G
+
 
 feature_counts:
-    do: False
+    do: false
     options: ''
     gff: ''
-    feature: 'gene'
-    attribute: 'ID'
+    feature: gene
+    attribute: ID
     threads: 4
+    resources:
+        mem: 8G
 
 #############################################################################
 #
@@ -85,9 +131,9 @@ feature_counts:
 #     distance is smaller than this parameter
 #
 sequana_coverage:
-    do: false
+    do: true
     circular: true
-    window_size: 20001
+    window_size: 10001
     chunksize: 5000000
     double_threshold: 0.5
     gc_window_size: 201
@@ -96,6 +142,9 @@ sequana_coverage:
     low_threshold: -4.0
     mixture_models: 2
     reference_file: ''
+    options: ""
+    resources:
+        mem: 8G
 
 
 #############################################################################
@@ -105,12 +154,13 @@ sequana_coverage:
 ## :Parameters:
 ##
 ## - options: any options recognised by multiqc
-## - output-directory: Create report in the specified output directory
 ## - config_file: by default, we use sequana RNA-seq multiqc_config file.
 ##       If you want your own multiqc, fill this entry
 multiqc:
-    options: "-p -f"
-    modules: sequana_bamtools_stats sequana_coverage bowtie2 bowtie1 featureCounts
-    input_directory: "."
-    config_file: "multiqc_config.yaml"
+    options: -p -f
+    modules: busco quast sequana_coverage prokka
+    input_directory: .
+    config_file: multiqc_config.yaml
+    resources:
+        mem: 8G
 
