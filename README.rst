@@ -99,6 +99,7 @@ Version   Description
 ========= ======================================================================
 1.1.0     * BAM files are now filtered to remove unmapped reads
           * set wrappers branch in config file and update pipeline.
+          * refactorise to use click and new sequana-pipetools
 1.0.0     * Use latest sequana-wrappers and graphviz apptainer
 0.12.0    * Use latest pipetools and add singularity containers
 0.11.1    * Fix typo when setting coverage to True and allow untagged filenames
