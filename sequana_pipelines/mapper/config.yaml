@@ -31,7 +31,7 @@ apptainers:
     minimap2: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
     multiqc: https://zenodo.org/record/10205070/files/multiqc_1.16.0.img
     samtools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
-    sequana_coverage: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    sequana_coverage: https://zenodo.org/record/10209929/files/sequana_0.16.1.img
     subread: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
 
 

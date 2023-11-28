@@ -315,8 +315,8 @@ if config["sequana_coverage"]["do"]:
             output_directory="{sample}/sequana_coverage"
         log:
             "logs/sequana_coverage/{sample}_sequana_coverage.log"
-        #container:
-        #    config["apptainers"]["sequana_coverage"]
+        container:
+            config["apptainers"]["sequana_coverage"]
         resources:
             **config["sequana_coverage"]["resources"]
         wrapper:
