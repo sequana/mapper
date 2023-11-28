@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "sequana-mapper"
-version = "1.2.0"
+version = "1.1.0"
 description = "A multi-sample mapper to map reads onto a reference"
 authors = ["Sequana Team"]
 license = "BSD-3"
