@@ -13,6 +13,7 @@
 ##############################################################################
 """Mappper pipeline"""
 import os
+import glob
 
 
 from sequana_pipetools import PipelineManager
@@ -56,7 +57,7 @@ rule copy_reference:
         """
 
 
-if config['general']['mapper'] == "bwa":
+if config['general']['mapper'] in ["bwa", "bwa_split"]:
     reference = config["general"]["reference_file"]
 
     rule bwa_index:
@@ -69,7 +70,7 @@ if config['general']['mapper'] == "bwa":
             "reference/build.log"
         params:
             options="",
-            index_algorithm='is'
+            index_algorithm=config['bwa']['index_algorithm']
         threads: 2
         resources:
             **config["bwa_index"]["resources"]
@@ -78,6 +79,8 @@ if config['general']['mapper'] == "bwa":
         wrapper:
             f"{manager.wrappers}/wrappers/bwa/build"
 
+# now switch between aligners
+if config['general']['mapper'] == "bwa":
     rule bwa:
         input:
             fastq=manager.getrawdata(),
@@ -87,7 +90,7 @@ if config['general']['mapper'] == "bwa":
         output:
             sorted=temp("{sample}/{sample}.sorted.bam")
         log:
-            "{sample}/{sample}.log"
+            "{sample}/bwa/{sample}.log"
         params:
             options=config["bwa"]["options"],
             tmp_directory=config["bwa"]["tmp_directory"]
@@ -98,6 +101,72 @@ if config['general']['mapper'] == "bwa":
             config['apptainers']['bwa']
         wrapper:
             f"{manager.wrappers}/wrappers/bwa/align"
+
+elif config['general']['mapper'] == 'bwa_split':
+
+    checkpoint split_fasta:
+        input: manager.getrawdata()
+        output: directory("{sample}/split/")
+        params:
+            nreads=config['bwa_split']['nreads']
+        container:
+            config['apptainers']['seqkit']
+        shell:
+            """
+            seqkit split2 --by-size {params.nreads} -O {wildcards.sample}/split -1 {input[0]} -2 {input[1]}
+            """
+
+    def get_bwa_input():
+        if manager.paired is True:
+            return (
+                    "{sample}/split/{sample}_R1_001.{splitid}.fastq.gz",
+                    "{sample}/split/{sample}_R2_001.{splitid}.fastq.gz"
+                    )
+        else:
+            return "{sample}/split/{sample}_R1_001.{splitid}.fastq.gz"
+
+    # intermediate
+    rule bwa_intermediate:
+        input:
+            fastq=get_bwa_input(),
+            bwa_bwt="reference/genome.fasta.bwt",
+            fai="reference/genome.fasta.fai",
+            reference="reference/genome.fasta"
+        output:
+            sorted=temp("{sample}/split/{sample}.sorted.{splitid}.bam")
+        log:
+            "{sample}/split/{sample}.{splitid}.log"
+        params:
+            options=config["bwa"]["options"],
+            tmp_directory=config["bwa"]["tmp_directory"]
+        threads: 2
+        resources:
+            **config["bwa"]["resources"]
+        container:
+            config['apptainers']['bwa']
+        wrapper:
+            f"{manager.wrappers}/wrappers/bwa/align"
+
+
+    def aggregate_bwa(wildcards):
+        checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
+
+        splitter = glob.glob(checkpoint_output+ "/*fastq.gz")
+        # FIXME: hardcoded fastq.gz
+        splitter = [x.split('.')[-3] for x in splitter if x.endswith(".fastq.gz") and "_R1_" in x]
+        filenames = expand("{sample}/split/{sample}.sorted.{splitid}.bam",
+            sample=manager.samples,
+            splitid=splitter)
+        return filenames
+
+    rule bwa_merge:
+        input: aggregate_bwa
+        output:
+            sorted=temp("{sample}/{sample}.sorted.bam")
+        shell:
+            """
+            samtools merge {output} {input}
+            """
 
 
 elif config['general']['mapper'] == "minimap2":

@@ -1,13 +1,11 @@
 import os
-import tempfile
 import subprocess
 import sys
-
-
-from sequana_pipelines.mapper.main import main
+import tempfile
 
 from click.testing import CliRunner
 
+from sequana_pipelines.mapper.main import main
 
 from . import test_dir
 
@@ -16,7 +14,7 @@ sharedir = f"{test_dir}/data"
 
 def test_standalone_subprocess():
     directory = tempfile.TemporaryDirectory()
-    cmd = """sequana_mapper --input-directory {} 
+    cmd = """sequana_mapper --input-directory {}
             --working-directory {} --force""".format(
         sharedir, directory.name
     )
@@ -27,51 +25,60 @@ def test_standalone_script():
     directory = tempfile.TemporaryDirectory()
 
     runner = CliRunner()
-    results = runner.invoke(main, [
-        "--input-directory",
-        sharedir,
-        "--reference-file",
-        sharedir + "/measles.fa",
-        "--working-directory",
-        directory.name,
-        "--force",
-    ])
+    results = runner.invoke(
+        main,
+        [
+            "--input-directory",
+            sharedir,
+            "--reference-file",
+            sharedir + "/measles.fa",
+            "--working-directory",
+            directory.name,
+            "--force",
+        ],
+    )
     assert results.exit_code == 0
 
 
 def test_standalone_script_minimap2():
     directory = tempfile.TemporaryDirectory()
     runner = CliRunner()
-    results = runner.invoke(main, [
-        "--input-directory",
-        sharedir,
-        "--reference-file",
-        sharedir + "/measles.fa",
-        "--working-directory",
-        directory.name,
-        "--force",
-        "--mapper",
-        "minimap2",
-    ])
+    results = runner.invoke(
+        main,
+        [
+            "--input-directory",
+            sharedir,
+            "--reference-file",
+            sharedir + "/measles.fa",
+            "--working-directory",
+            directory.name,
+            "--force",
+            "--aligner-choice",
+            "minimap2",
+        ],
+    )
     assert results.exit_code == 0
+
 
 def test_standalone_script_saf(tmpdir):
     directory = tempfile.TemporaryDirectory()
 
     runner = CliRunner()
-    results = runner.invoke(main, [
-        "--input-directory",
-        sharedir,
-        "--reference-file",
-        sharedir + "/measles.fa",
-        "--working-directory",
-        directory.name,
-        "--force",
-        "--capture-annotation-file", 
-        sharedir + "/test.saf",
-    ])
+    results = runner.invoke(
+        main,
+        [
+            "--input-directory",
+            sharedir,
+            "--reference-file",
+            sharedir + "/measles.fa",
+            "--working-directory",
+            directory.name,
+            "--force",
+            "--capture-annotation-file",
+            sharedir + "/test.saf",
+        ],
+    )
     assert results.exit_code == 0
-
 
 
 def test_full():

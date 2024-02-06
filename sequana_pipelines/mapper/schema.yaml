@@ -24,7 +24,7 @@ mapping:
         mapping:
             "mapper":
                 type: str
-                enum: [bwa, minimap2, bowtie2]
+                enum: [bwa, minimap2, bowtie2, bwa_split]
             "reference_file":
                 type: str
             "annotation_file":
@@ -32,6 +32,24 @@ mapping:
             "create_bigwig":
                 type: bool
 
+    "bwa_split":
+        type: map
+        mapping:
+            "nreads":
+                type: int 
+            "index_algorithm":
+                type: str 
+            "options":
+                type: str 
+            "threads":
+                type: int 
+            "tmp_directory":
+                type: str 
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
     "bwa":
         type: map
         mapping:
