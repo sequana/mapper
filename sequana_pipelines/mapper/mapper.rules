@@ -150,13 +150,9 @@ elif config['general']['mapper'] == 'bwa_split':
 
     def aggregate_bwa(wildcards):
         checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
-
-        splitter = glob.glob(checkpoint_output+ "/*fastq.gz")
-        # FIXME: hardcoded fastq.gz
-        splitter = [x.split('.')[-3] for x in splitter if x.endswith(".fastq.gz") and "_R1_" in x]
-        filenames = expand("{sample}/split/{sample}.sorted.{splitid}.bam",
-            sample=manager.samples,
-            splitid=splitter)
+        splitter = glob.glob(checkpoint_output+ "/*.gz")
+        splitter = [x.split('.')[-3] for x in splitter if x.endswith(".gz") and "_R1_" in x]
+        filenames = expand("{{sample}}/split/{{sample}}.sorted.{splitid}.bam", splitid=splitter)
         return filenames
 
     rule bwa_merge:
