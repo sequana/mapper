@@ -303,67 +303,10 @@ if config["feature_counts"]["do"]:
 
 if config["sequana_coverage"]["do"]:
 
-    rule bedtools_depth:
-        input:
-            "{sample}/{sample}.filtered.sorted.bam",
-        output:
-            "{sample}/bedtools_depth/{sample}.bed"
-        log:
-            "{sample}/bedtools_depth/{sample}.log"
-        resources:
-            **config["sequana_coverage"]["resources"]
-        container:
-            config['apptainers']['bedtools']
-        shell:
-            """
-            bedtools genomecov -d -ibam {input} > {output}
-            """
-
-    rule samtools_depth:
-        input:
-            "{sample}/{sample}.filtered.sorted.bam",
-        output:
-            "{sample}/samtools_depth/{sample}.bed"
-        log:
-            "{sample}/samtools_depth/{sample}.log"
-        params:
-            # change -m to higher value would you have a large coverage
-            options="-m " + str(config['samtools_depth'].get("max_depth", 20000))
-        resources:
-            **config["samtools_depth"]["resources"]
-        container:
-            config['apptainers']['samtools']
-        wrapper:
-            f"{manager.wrappers}/wrappers/samtools_depth"
-
-    rule double_bed:
-        input:
-            bed1="{sample}/bedtools_depth/{sample}.bed",
-            bed2="{sample}/samtools_depth/{sample}.bed"
-        output:
-            "{sample}/double_bed/{sample}.bed"
-        run:
-            with open(input.bed1) as fin1, open(input.bed2) as fin2, open(output[0], "w") as fout:
-                for line1, line2 in zip(fin1, fin2):
-                    name1, pos1, count1 = line1.split()
-                    name2, pos2, count2 = line2.split()
-                    assert name1==name2
-                    assert pos1==pos2
-                    fout.write(f"{name1}\t{pos1}\t{count1}\t{count2}\n")
-
-
-    def get_sequana_coverage_input(config):
-        input_file = {
-            "bed": "{sample}/double_bed/{sample}.bed",
-            "fasta": reference_file
-        }
-        if config["general"]["annotation_file"]:
-            input_file['gbk'] = config["general"]["annotation_file"]
-        return input_file
-
     rule sequana_coverage:
         input:
-            **get_sequana_coverage_input(config)
+            bed="{sample}/{sample}.filtered.sorted.bam",
+            fasta=rules.copy_reference.output[0]
         output:
             "{sample}/sequana_coverage/sequana_coverage.html"
         params:

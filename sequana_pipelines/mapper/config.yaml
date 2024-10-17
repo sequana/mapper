@@ -23,30 +23,19 @@ general:
 
 apptainers:
     bamtools: https://zenodo.org/record/10211475/files/bamtools_2.5.2.img
-    bedtools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
-    bowtie2: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
+    bowtie2: https://zenodo.org/record/8092297/files/bowtie2_2.5.1.img
     bwa: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
     deeptools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
     graphviz: https://zenodo.org/record/7928262/files/graphviz_7.0.5.img
     minimap2: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
     multiqc: https://zenodo.org/record/10205070/files/multiqc_1.16.0.img
-    samtools: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
-    sequana_coverage: https://zenodo.org/record/10460105/files/sequana_0.16.5.img
+    samtools: https://zenodo.org/record/7437898/files/samtools_1.16.1.img
+    sequana_coverage:  https://zenodo.org/record/13946414/files/sequana_coverage_0.18.0.img
     seqkit: https://zenodo.org/record/7821924/files/seqkit_2.4.0.img
     subread: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
 
 
 
-##############################################################################
-# samtools_depth
-#
-# :Parameters:
-#
-# - max_depth: by default max depth is 20,000 but can be changed here
-samtools_depth:
-    max_depth: 20000
-    resources:
-        mem: 8G
 
 ##############################################################################
 # BWA MEM indexing 
@@ -65,6 +54,7 @@ bam_indexing:
         mem: 8G
 
 bam2bigwig:
+    options: ""
     resources:
         mem: 8G
 
@@ -160,7 +150,7 @@ sequana_coverage:
     low_threshold: -4.0
     mixture_models: 2
     reference_file: ''
-    options: ""
+    options: " --second-mapq 35 "
     resources:
         mem: 8G
 
