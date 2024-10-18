@@ -33,8 +33,7 @@ apptainers:
     sequana_coverage:  https://zenodo.org/record/13946414/files/sequana_coverage_0.18.0.img
     seqkit: https://zenodo.org/record/7821924/files/seqkit_2.4.0.img
     subread: https://zenodo.org/record/7341710/files/sequana_tools_0.14.5.img
-
-
+    mosdepth: https://zenodo.org/record/12805460/files/mosdepth_0.3.8.img
 
 
 ##############################################################################
@@ -52,6 +51,15 @@ bwa_index:
 bam_indexing:
     resources:
         mem: 8G
+
+
+bam2bed:
+    options: ''
+    threads: 4
+    resources:
+        mem: 8G
+
+
 
 bam2bigwig:
     options: ""
@@ -150,7 +158,7 @@ sequana_coverage:
     low_threshold: -4.0
     mixture_models: 2
     reference_file: ''
-    options: " --second-mapq 35 "
+    options: "  "
     resources:
         mem: 8G
 

@@ -35,7 +35,7 @@ packages = [
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
 sequana = ">=0.18.0"
-sequana_pipetools = ">=1.0.5"
+sequana_pipetools = ">=1.0.6"
 click-completion = "^0.5.2"
 
 
