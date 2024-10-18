@@ -241,6 +241,8 @@ mapping:
     "bam2bigwig":
         type: map
         mapping:
+            "options":
+                type: str
             "resources":
                  type: map
                  mapping:
@@ -264,3 +266,17 @@ mapping:
                  mapping:
                      "mem":
                         type: str
+
+
+    "bam2bed":
+        type: map
+        mapping:
+            "options":
+                type: text
+                required: false
+            "threads":
+                type: int
+                required: true
+            "resources":
+                type: any
+

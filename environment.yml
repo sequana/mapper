@@ -13,9 +13,10 @@ dependencies:
   - deeptools
   - bedtools
   - bamtools
+  - mosdepth
   - sambamba
   - subread
   - pip:
-    - sequana
+    - sequana>=0.18
 
 

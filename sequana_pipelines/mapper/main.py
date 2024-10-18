@@ -109,6 +109,7 @@ def main(**options):
     if options.nanopore:
         cfg.minimap2.options = " -x map-ont "
         cfg.input_readtag = ""
+        cfg.general.mapper = "minimap2"
 
     if options.capture_annotation_file:
         cfg.feature_counts.do = True
