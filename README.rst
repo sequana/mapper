@@ -97,6 +97,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.3.1     * remove temp on BWA BAM file (more practical to keep them)
+1.3.0     * uses new sequana_coverage wrapper
 1.2.1     * fix bwa_split bwa aggreate stage (bug fix)
 1.2.0     * Implement a bwa_split method to speed up mapping of very large
             fastq files.
