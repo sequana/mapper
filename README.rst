@@ -97,6 +97,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.3.0
 1.2.1     * fix bwa_split bwa aggreate stage (bug fix)
 1.2.0     * Implement a bwa_split method to speed up mapping of very large
             fastq files.
