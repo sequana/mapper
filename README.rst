@@ -40,19 +40,30 @@ directory, create a directory called mapper/ where a snakemake pipeline can be e
     sequana_mapper --input-directory DATAPATH  --mapper bwa --create-bigwig
     sequana_mapper --input-directory DATAPATH  --mapper bwa --do-coverage
 
+
 This creates a directory with the pipeline and configuration file. You will then need
 to execute the pipeline::
 
     cd mapper
     sh mapper.sh  # for a local run
 
-This launch a snakemake pipeline. If you are familiar with snakemake, you can
-retrieve the pipeline itself and its configuration files and then execute the pipeline yourself with specific parameters::
+This launch a snakemake pipeline. See .sequana/profile/config.yaml to tune the behaviour of Snakemake.
 
-    snakemake -s mapper.rules -c config.yaml --cores 4 \
-        --wrapper-prefix https://raw.githubusercontent.com/sequana/sequana-wrappers/
+Usage with apptainer
+~~~~~~~~~~~~~~~~~~~~~
 
-Or use `sequanix <https://sequana.readthedocs.io/en/main/sequanix.html>`_ interface.
+With apptainer, initiate the working directory as follows::
+
+    sequana_rnaseq --use-apptainer 
+
+Images are downloaded in the working directory but you can store them in a directory globally (e.g.):
+
+    sequana_rnaseq --use-apptainer --apptainer-prefix ~/.sequana/apptainers
+
+and then::
+
+    cd rnaseq
+    sh rnaseq.sh
 
 
 Requirements
