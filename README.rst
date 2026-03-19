@@ -5,9 +5,9 @@
 .. image:: https://github.com/sequana/mapper/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/mapper/actions/
 
-.. image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C3.11-blue.svg
+.. image:: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg
     :target: https://pypi.python.org/pypi/sequana
-    :alt: Python  3.9 | 3.10 | 3.11
+    :alt: Python 3.9 | 3.10 | 3.11 | 3.12
 
 .. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
    :target: http://joss.theoj.org/papers/10.21105/joss.00352
@@ -34,50 +34,66 @@ You will need third-party software such as fastqc. Please see below for details.
 Usage
 ~~~~~
 
-This command will scan all files ending in .fastq.gz found in the local
-directory, create a directory called mapper/ where a snakemake pipeline can be executed.::
+Scan FastQ files in a directory and set up the pipeline (replace ``DATAPATH`` and ``genome.fa`` with your inputs)::
 
-    sequana_mapper --input-directory DATAPATH  --mapper bwa --create-bigwig
-    sequana_mapper --input-directory DATAPATH  --mapper bwa --do-coverage
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --aligner-choice bwa
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --aligner-choice bwa --do-coverage
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --aligner-choice bwa --create-bigwig
 
+For long-read data, use the dedicated presets::
 
-This creates a directory with the pipeline and configuration file. You will then need
-to execute the pipeline::
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --pacbio     # sets minimap2 -x map-pb
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --nanopore   # sets minimap2 -x map-ont
+
+For capture-seq projects (feature counting)::
+
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --capture-annotation-file targets.saf
+
+This creates a ``mapper/`` directory with the pipeline and configuration file. Execute the pipeline locally::
 
     cd mapper
-    sh mapper.sh  # for a local run
+    sh mapper.sh
 
-This launch a snakemake pipeline. See .sequana/profile/config.yaml to tune the behaviour of Snakemake.
+See ``.sequana/profile/config.yaml`` to tune Snakemake behaviour (cores, cluster settings, etc.).
 
 Usage with apptainer
 ~~~~~~~~~~~~~~~~~~~~~
 
 With apptainer, initiate the working directory as follows::
 
-    sequana_rnaseq --use-apptainer 
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --use-apptainer
 
-Images are downloaded in the working directory but you can store them in a directory globally (e.g.):
+Images are downloaded in the working directory but you can store them in a shared location::
 
-    sequana_rnaseq --use-apptainer --apptainer-prefix ~/.sequana/apptainers
+    sequana_mapper --input-directory DATAPATH --reference-file genome.fa --use-apptainer --apptainer-prefix ~/.sequana/apptainers
 
 and then::
 
-    cd rnaseq
-    sh rnaseq.sh
+    cd mapper
+    sh mapper.sh
 
 
 Requirements
 ~~~~~~~~~~~~
 
-This pipelines requires the following executable(s):
+This pipeline requires the following executables (install via bioconda/conda):
 
-- bamtools
-- bwa
-- multiqc
-- sequana_coverage
-- minimap2
-- bowtie2
-- deeptools
+- **bwa** — short-read aligner (default)
+- **minimap2** — long-read aligner (PacBio / Nanopore)
+- **bowtie2** — alternative short-read aligner
+- **samtools** / **sambamba** — BAM processing
+- **bamtools** — BAM statistics
+- **deeptools** — bigwig generation (``bamCoverage``)
+- **bedtools** — genome arithmetic
+- **subread** — feature counting (``featureCounts``, capture-seq only)
+- **mosdepth** — fast coverage depth
+- **seqkit** — FASTQ statistics
+- **multiqc** — aggregated HTML report
+- **sequana_coverage** — coverage analysis (prokaryotes)
+
+Install all dependencies at once::
+
+    mamba env create -f environment.yml
 
 .. image:: https://raw.githubusercontent.com/sequana/mapper/main/sequana_pipelines/mapper/dag.png
 
@@ -85,13 +101,24 @@ This pipelines requires the following executable(s):
 Details
 ~~~~~~~~~
 
-This pipeline runs **mapper** in parallel on the input fastq files (paired or not).
-A brief sequana summary report is also produced. When using **--pacbio** option,
-*-x map-pb* options is automatically added to the config.yaml file and the
-readtag is set to None.
+This pipeline maps FastQ files (paired or single-end) in parallel onto a reference genome and produces
+filtered BAM files, a MultiQC HTML report, and optionally coverage tracks and feature counts.
 
-The BAM files are filtered to remove unmapped reads to keep BAM files to minimal size. However,
-the multiqc and statistics to be found in  {sample}/bamtools_stats/ includes mapped and unmapped reads information. Each BAM file is stored in a directory named after the sample.
+**Aligner choice** (``--aligner-choice``):
+
+- ``bwa`` (default) — BWA-MEM; index algorithm is auto-selected (``is`` or ``bwtsw``) based on reference size
+- ``bwa_split`` — experimental; splits large FastQs into 1 M-read chunks for parallel BWA jobs, then merges
+- ``minimap2`` — long-read aligner; use ``--pacbio`` (sets ``-x map-pb``) or ``--nanopore`` (sets ``-x map-ont``)
+- ``bowtie2`` — standard short-read aligner
+
+**BAM filtering**: unmapped reads are removed to minimise file size. Statistics reported by MultiQC
+(in ``{sample}/bamtools_stats/``) still include both mapped and unmapped read counts.
+
+**Optional outputs**:
+
+- ``--do-coverage`` — runs ``sequana_coverage`` for depth-of-coverage analysis (prokaryotes)
+- ``--create-bigwig`` — generates bigwig files via ``bamCoverage`` (deeptools)
+- ``--capture-annotation-file`` — enables ``featureCounts`` for capture-seq efficiency metrics
 
 
 
@@ -108,6 +135,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.4.0     * update wrappers to v24.8.29
+          * update sequana_pipetools requirement to >=1.5
 1.3.1     * remove temp on BWA BAM file (more practical to keep them)
 1.3.0     * uses new sequana_coverage wrapper
 1.2.1     * fix bwa_split bwa aggreate stage (bug fix)
