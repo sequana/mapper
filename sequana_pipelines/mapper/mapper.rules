@@ -15,7 +15,6 @@
 import os
 import glob
 
-
 from sequana_pipetools import PipelineManager
 
 # This must be defined before the include
@@ -76,8 +75,8 @@ if config['general']['mapper'] in ["bwa", "bwa_split"]:
             **config["bwa_index"]["resources"]
         container:
             config['apptainers']['bwa']
-        wrapper:
-            f"{manager.wrappers}/wrappers/bwa/build"
+        shell:
+            manager.get_shell("bwa/build", "v1")
 
 # now switch between aligners
 if config['general']['mapper'] == "bwa":
@@ -99,8 +98,8 @@ if config['general']['mapper'] == "bwa":
             **config["bwa"]["resources"]
         container:
             config['apptainers']['bwa']
-        wrapper:
-            f"{manager.wrappers}/wrappers/bwa/align"
+        shell:
+            manager.get_shell("bwa/align", "v1")
 
 elif config['general']['mapper'] == 'bwa_split':
 
@@ -144,8 +143,8 @@ elif config['general']['mapper'] == 'bwa_split':
             **config["bwa"]["resources"]
         container:
             config['apptainers']['bwa']
-        wrapper:
-            f"{manager.wrappers}/wrappers/bwa/align"
+        shell:
+            manager.get_shell("bwa/align", "v1")
 
     def aggregate_bwa(wildcards):
         checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
@@ -179,8 +178,8 @@ elif config['general']['mapper'] == "minimap2":
             config['apptainers']['minimap2']
         resources:
             **config["minimap2"]["resources"]
-        wrapper:
-            f"{manager.wrappers}/wrappers/minimap2"
+        shell:
+            manager.get_shell("minimap2/align", "v1")
 
 elif config['general']['mapper'] == "bowtie2":
     if not os.path.exists("reference/genome.1.bt2"):
@@ -189,7 +188,6 @@ elif config['general']['mapper'] == "bowtie2":
                 reference="reference/genome.fasta"
             output:
                 multiext("reference/genome", ".1.bt2", ".2.bt2", ".3.bt2", ".4.bt2", ".rev.1.bt2", ".rev.2.bt2"),
-
             log:
                 "logs/bowtie2_indexing/bowtie2_genome.log"
             params:
@@ -200,8 +198,8 @@ elif config['general']['mapper'] == "bowtie2":
                 **config["bowtie2_index"]["resources"]
             container:
                 config['apptainers']['bowtie2']
-            wrapper:
-                f"{manager.wrappers}/wrappers/bowtie2/build"
+            shell:
+                manager.get_shell("bowtie2/build", "v1")
 
     rule bowtie2:
         input:
@@ -219,8 +217,9 @@ elif config['general']['mapper'] == "bowtie2":
             **config["bowtie2"]["resources"]
         container:
             config['apptainers']['bowtie2']
-        wrapper:
-            f"{manager.wrappers}/wrappers/bowtie2/align"
+        shell:
+            manager.get_shell("bowtie2/align", "v1")
+
 else:
     mapper = config['general']['mapper']
     raise ValueError(f"mapper tool must be set to bwa, bowtie2 or minimap2. You provided {mapper}")
@@ -235,7 +234,6 @@ rule bam_indexing:
         config['apptainers']['samtools']
     shell:
         """
-        # switch from bamtools index to samtools index.
         samtools index {input}
         """
 
@@ -269,8 +267,8 @@ rule bamtools_stats:
         config['apptainers']['bamtools']
     resources:
         **config["bamtools_stats"]["resources"]
-    wrapper:
-        f"{manager.wrappers}/wrappers/bamtools/stats"
+    shell:
+        manager.get_shell("bamtools/stats", "v1")
 
 
 if config["feature_counts"]["do"]:
@@ -294,8 +292,8 @@ if config["feature_counts"]["do"]:
             **config["feature_counts"]["resources"]
         container:
             config['apptainers']['subread']
-        wrapper:
-            f"{manager.wrappers}/wrappers/feature_counts"
+        shell:
+            manager.get_shell("feature_counts/run", "v1")
 
 
 # Sequana_coverage analysis
@@ -349,9 +347,8 @@ if config["sequana_coverage"]["do"]:
             config["apptainers"]["sequana_coverage"]
         resources:
             **config["sequana_coverage"]["resources"]
-        wrapper:
-            f"{manager.wrappers}/wrappers/sequana_coverage"
-
+        shell:
+            manager.get_shell("sequana_coverage/run", "v1")
 
 
 if config["general"]["create_bigwig"]:
@@ -385,7 +382,6 @@ rule multiqc:
     params:
         options=multiqc_params_options,
         input_directory=config['multiqc']['input_directory'],
-        config_file=config['multiqc']['config_file'],
         modules=config['multiqc']['modules']
     log:
         "multiqc/multiqc.log"
@@ -393,8 +389,8 @@ rule multiqc:
         **config["multiqc"]["resources"]
     container:
         config["apptainers"]["multiqc"]
-    wrapper:
-       f"{manager.wrappers}/wrappers/multiqc"
+    shell:
+        manager.get_shell("multiqc/run", "v1")
 
 # ========================================================== rulegraph
 rule rulegraph:
@@ -480,7 +476,7 @@ If coverage was selected, you should also have HTML reports for each sample with
             p = Path(filename)
 
             parts = filename.split("/")
-            image = SequanaReport.png_to_embedded_png("self_dummy", 
+            image = SequanaReport.png_to_embedded_png("self_dummy",
                         filename,
                         style="align:center; width:95%; height:95%",
                         alt=parts[0])
@@ -504,5 +500,3 @@ If coverage was selected, you should also have HTML reports for each sample with
 
 onerror:
     manager.onerror()
-
-
