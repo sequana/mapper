@@ -135,6 +135,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.4.1     * update to use wrappers.shells and wrappers.snippets
+            drop wrappers usage
 1.4.0     * update wrappers to v24.8.29
           * update sequana_pipetools requirement to >=1.5
 1.3.1     * remove temp on BWA BAM file (more practical to keep them)

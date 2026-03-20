@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "sequana-mapper"
-version = "1.4.0"
+version = "1.4.1"
 description = "A multi-sample mapper to map reads onto a reference"
 authors = ["Sequana Team"]
 license = "BSD-3"
@@ -50,4 +50,12 @@ pytest = "^8.0.0"
 mock = "^5.1.0"
 pytest-mock = "^3.11.1"
 pytest-cov = "^4.1.0"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::pytest.PytestDeprecationWarning",
+    "ignore::DeprecationWarning:click_completion",
+    "ignore::DeprecationWarning:importlib",
+]
+asyncio_mode = "auto"
 
