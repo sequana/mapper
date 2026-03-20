@@ -370,18 +370,15 @@ if config["general"]["create_bigwig"]:
 
 # ========================================================== multiqc
 
-multiqc_params_options = config['multiqc']['options']
-if manager.config.multiqc.config_file:
-    multiqc_params_options += f" -c {manager.config.multiqc.config_file}"
-
 rule multiqc:
     input:
         get_multiqc_inputs()
     output:
        "multiqc/multiqc_report.html"
     params:
-        options=multiqc_params_options,
+        options=config['multiqc']['options'],
         input_directory=config['multiqc']['input_directory'],
+        config_file=config['multiqc']['config_file'],
         modules=config['multiqc']['modules']
     log:
         "multiqc/multiqc.log"
