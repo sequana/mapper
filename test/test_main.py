@@ -91,7 +91,7 @@ def test_full():
         cmd = cmd.format(sharedir, wk)
         subprocess.call(cmd.split())
 
-        stat = subprocess.call("sh mapper.sh".split(), cwd=wk)
+        stat = subprocess.call("bash mapper.sh".split(), cwd=wk)
 
         assert os.path.exists(wk + "/multiqc/multiqc_report.html")
 
