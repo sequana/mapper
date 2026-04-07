@@ -1,22 +1,19 @@
 name: mapper
-
 channels:
-  - conda-forge
-  - bioconda
-  - defaults
-
+- conda-forge
+- bioconda
+- defaults
 dependencies:
-  - bwa
-  - minimap2
-  - bowtie2
-  - samtools
-  - deeptools
-  - bedtools
-  - bamtools
-  - mosdepth
-  - sambamba
-  - subread
-  - pip:
-    - sequana>=0.18
-
-
+- bwa
+- minimap2
+- bowtie2
+- samtools
+- deeptools
+- bedtools
+- bamtools
+- mosdepth
+- sambamba
+- subread
+- pulp>=2.8
+- pip:
+  - sequana>=0.18
