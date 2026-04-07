@@ -20,7 +20,6 @@ jobs:
         python: ['3.11']
       fail-fast: false
 
-
     steps:
 
     # Clean up unnecessary preinstalled packages to free disk space
@@ -84,13 +83,13 @@ jobs:
     - name: Install package itself
       run: |
         pip install .
-        pip install "pulp==2.7.0" --no-deps
+        pip install "pulp>=2.8" --no-deps
 
     # Run tests using Apptainer
     - name: Run Apptainer tests
       run: |
         sequana_mapper --input-directory test/data/ \
           --reference-file test/data/measles.fa \
-          --apptainer-prefix ~/.apptainer/cache
+          --use-apptainer --apptainer-prefix ~/.apptainer/cache
 
-        cd mapper && sh mapper.sh
+        cd mapper && bash mapper.sh
