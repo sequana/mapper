@@ -28,19 +28,21 @@ jobs:
         sudo rm -rf /usr/share/dotnet
         sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
-    # Install Apptainer from Ubuntu's default repos (no PPA, avoids flaky network timeouts)
-    - name: Install Apptainer
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y apptainer
-        apptainer --version
-
     # Cache Apptainer image cache (~/.apptainer/cache)
     - name: Cache Apptainer images
       uses: actions/cache@v4
       with:
         path: ~/.apptainer/cache
         key: ${{ runner.os }}-apptainer-images-v1
+
+    # Install Apptainer from GitHub releases (avoids flaky Launchpad PPA)
+    - name: Install Apptainer
+      run: |
+        APPTAINER_VERSION=$(curl -s https://api.github.com/repos/apptainer/apptainer/releases/latest \
+          | grep '"tag_name"' | cut -d'"' -f4 | sed 's/v//')
+        wget -q "https://github.com/apptainer/apptainer/releases/download/v${APPTAINER_VERSION}/apptainer_${APPTAINER_VERSION}_amd64.deb"
+        sudo apt-get install -y "./apptainer_${APPTAINER_VERSION}_amd64.deb"
+        apptainer --version
 
     # Checkout repository
     - name: Checkout repo
