@@ -24,6 +24,7 @@ apptainers:
     bowtie2: https://zenodo.org/record/8037162/files/sequana_minimal_23.6.13.img
     bwa: https://zenodo.org/record/8037162/files/sequana_minimal_23.6.13.img
     deeptools: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
+    fastqc: https://zenodo.org/record/7015004/files/fastqc_0.11.9-py3.img
     graphviz: https://zenodo.org/record/7928262/files/graphviz_7.0.5.img
     minimap2: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
     multiqc: https://zenodo.org/record/10205070/files/multiqc_1.16.0.img
@@ -159,6 +160,21 @@ sequana_coverage:
     options: "  "
     resources:
         mem: 8G
+
+
+#############################################################################
+##   FastQC computes quality-control metrics on the raw input FastQ files.
+##
+## :Parameters:
+##
+## - do: set to true to run FastQC on the raw reads
+## - options: any options recognised by fastqc (e.g. --nogroup)
+fastqc:
+    do: false
+    options: --nogroup
+    threads: 4
+    resources:
+        mem: 4G
 
 
 #############################################################################

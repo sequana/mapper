@@ -1,3 +1,4 @@
+import glob
 import os
 import subprocess
 import sys
@@ -79,6 +80,25 @@ def test_standalone_script_saf(tmpdir):
         assert results.exit_code == 0
 
 
+def test_standalone_script_fastqc(tmpdir):
+    with tempfile.TemporaryDirectory() as directory:
+        runner = CliRunner()
+        results = runner.invoke(
+            main,
+            [
+                "--input-directory",
+                sharedir,
+                "--reference-file",
+                sharedir + "/measles.fa",
+                "--working-directory",
+                directory,
+                "--force",
+                "--do-fastqc",
+            ],
+        )
+        assert results.exit_code == 0
+
+
 def test_full():
 
     with tempfile.TemporaryDirectory() as directory:
@@ -86,7 +106,7 @@ def test_full():
         wk = directory
 
         cmd = "sequana_mapper --input-directory {} "
-        cmd += " --working-directory {}  --force "
+        cmd += " --working-directory {}  --force --do-fastqc "
         cmd += " --reference-file " + sharedir + "/measles.fa"
         cmd = cmd.format(sharedir, wk)
         subprocess.call(cmd.split())
@@ -94,6 +114,11 @@ def test_full():
         stat = subprocess.call("bash mapper.sh".split(), cwd=wk)
 
         assert os.path.exists(wk + "/multiqc/multiqc_report.html")
+
+        # --do-fastqc must produce per-sample FastQC output
+        fastqc_done = glob.glob(wk + "/*/fastqc/fastqc.done")
+        assert len(fastqc_done) > 0
+        assert len(glob.glob(wk + "/*/fastqc/*_fastqc.zip")) > 0
 
 
 def test_version():

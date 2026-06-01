@@ -64,6 +64,23 @@ mapping:
                      "mem":
                         type: str
 
+    "fastqc":
+        type: map
+        mapping:
+            "do":
+                type: bool
+                default: False
+            "options":
+                type: str
+            "threads":
+                type: int
+                range: { min: 1 }
+            "resources":
+                 type: map
+                 mapping:
+                     "mem":
+                        type: str
+
     "multiqc":
         type: map
         mapping:

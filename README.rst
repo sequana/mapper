@@ -29,7 +29,7 @@ If you already have all requirements, you can install the packages using pip::
 
     pip install sequana_mapper --upgrade
 
-You will need third-party software such as fastqc. Please see below for details.
+You will need third-party software such as bwa and samtools. Please see below for details.
 
 Usage
 ~~~~~
@@ -52,7 +52,7 @@ For capture-seq projects (feature counting)::
 This creates a ``mapper/`` directory with the pipeline and configuration file. Execute the pipeline locally::
 
     cd mapper
-    sh mapper.sh
+    bash mapper.sh
 
 See ``.sequana/profile/config.yaml`` to tune Snakemake behaviour (cores, cluster settings, etc.).
 
@@ -70,7 +70,7 @@ Images are downloaded in the working directory but you can store them in a share
 and then::
 
     cd mapper
-    sh mapper.sh
+    bash mapper.sh
 
 
 Requirements
@@ -83,6 +83,7 @@ This pipeline requires the following executables (install via bioconda/conda):
 - **bowtie2** — alternative short-read aligner
 - **samtools** / **sambamba** — BAM processing
 - **bamtools** — BAM statistics
+- **fastqc** — raw-read quality control (optional, ``--do-fastqc``)
 - **deeptools** — bigwig generation (``bamCoverage``)
 - **bedtools** — genome arithmetic
 - **subread** — feature counting (``featureCounts``, capture-seq only)
@@ -117,6 +118,7 @@ filtered BAM files, a MultiQC HTML report, and optionally coverage tracks and fe
 **Optional outputs**:
 
 - ``--do-coverage`` — runs ``sequana_coverage`` for depth-of-coverage analysis (prokaryotes)
+- ``--do-fastqc`` — runs ``fastqc`` on the raw input reads (included in the MultiQC report)
 - ``--create-bigwig`` — generates bigwig files via ``bamCoverage`` (deeptools)
 - ``--capture-annotation-file`` — enables ``featureCounts`` for capture-seq efficiency metrics
 
@@ -135,6 +137,7 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.5.0     * add optional FastQC on raw reads (--do-fastqc), included in MultiQC
 1.4.1     * update to use wrappers.shells and wrappers.snippets
             drop wrappers usage
 1.4.0     * update wrappers to v24.8.29

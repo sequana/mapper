@@ -32,6 +32,7 @@ help = init_click(
             "--capture-annotation-file",
             "--create-bigwig",
             "--do-coverage",
+            "--do-fastqc",
             "--nanopore",
             "--pacbio",
             "--reference-file",
@@ -57,6 +58,7 @@ cluster to speed up analysis.""",
 @click.option("--reference-file", required=True, help="You input reference file in fasta format")
 @click.option("--annotation-file", help="Used by the sequana_coverage tool if provided")
 @click.option("--do-coverage", is_flag=True, help="Use sequana_coverage (prokaryotes)")
+@click.option("--do-fastqc", is_flag=True, help="Run FastQC on the raw input reads (included in MultiQC report)")
 @click.option(
     "--pacbio",
     is_flag=True,
@@ -98,6 +100,9 @@ def main(**options):
 
     if options.do_coverage:
         cfg.sequana_coverage.do = True
+
+    if options.do_fastqc:
+        cfg.fastqc.do = True
 
     if options.create_bigwig:
         cfg.general.create_bigwig = True

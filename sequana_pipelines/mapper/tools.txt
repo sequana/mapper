@@ -3,6 +3,7 @@ bedtools
 bowtie2
 bwa
 deeptools
+fastqc
 featureCounts
 minimap2
 sambamba
