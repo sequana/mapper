@@ -36,6 +36,3 @@ What is Sequana ?
 To join the project, please let us know on `github <https://github.com/sequana/sequana/issues/306>`_.
 
 For more information, please see `github <https://sequana.readthedocs.io>`_.
-
-
-

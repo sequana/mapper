@@ -11,6 +11,7 @@ dependencies:
 - deeptools
 - bedtools
 - bamtools
+- fastqc
 - mosdepth
 - sambamba
 - subread

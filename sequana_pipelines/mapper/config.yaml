@@ -21,16 +21,17 @@ general:
 
 apptainers:
     bamtools: https://zenodo.org/record/10211475/files/bamtools_2.5.2.img
-    bowtie2: https://zenodo.org/record/8037162/files/sequana_minimal_23.6.13.img
+    bowtie2: https://zenodo.org/record/19127803/files/sequana_minimal_26.3.19.img 
     bwa: https://zenodo.org/record/8037162/files/sequana_minimal_23.6.13.img
-    deeptools: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
+    deeptools: https://zenodo.org/record/19187268/files/deeptools_3.5.6.img 
+    fastqc: https://zenodo.org/record/7015004/files/fastqc_0.11.9-py3.img
     graphviz: https://zenodo.org/record/7928262/files/graphviz_7.0.5.img
-    minimap2: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
+    minimap2: https://zenodo.org/record/19127803/files/sequana_minimal_26.3.19.img 
     multiqc: https://zenodo.org/record/10205070/files/multiqc_1.16.0.img
     samtools: https://zenodo.org/record/7437898/files/samtools_1.16.1.img
-    sequana_coverage:  https://zenodo.org/record/13946414/files/sequana_coverage_0.18.0.img
+    sequana_coverage:  https://zenodo.org/record/20467327/files/sequana_0.22.0.img 
     seqkit: https://zenodo.org/record/7821924/files/seqkit_2.4.0.img
-    subread: https://zenodo.org/record/18257162/files/sequana_tools_26.1.14.img
+    subread: https://zenodo.org/record/8037099/files/subread_2.0.3.img
     mosdepth: https://zenodo.org/record/12805460/files/mosdepth_0.3.8.img
 
 
@@ -159,6 +160,21 @@ sequana_coverage:
     options: "  "
     resources:
         mem: 8G
+
+
+#############################################################################
+##   FastQC computes quality-control metrics on the raw input FastQ files.
+##
+## :Parameters:
+##
+## - do: set to true to run FastQC on the raw reads
+## - options: any options recognised by fastqc (e.g. --nogroup)
+fastqc:
+    do: false
+    options: --nogroup
+    threads: 4
+    resources:
+        mem: 4G
 
 
 #############################################################################

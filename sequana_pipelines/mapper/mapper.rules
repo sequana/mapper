@@ -28,6 +28,8 @@ manager = PipelineManager("mapper", config)
 def get_multiqc_inputs():
     inputs = []
     inputs += expand("{sample}/bamtools_stats/sequana_bamtools_stats_{sample}.txt", sample=manager.samples)
+    if config["fastqc"]["do"]:
+        inputs += expand("{sample}/fastqc/fastqc.done", sample=manager.samples)
     if config["feature_counts"]["do"]:
         inputs += expand("{sample}/feature_counts/{sample}_feature.out", sample=manager.samples)
     if config["sequana_coverage"]["do"]:
@@ -87,6 +89,8 @@ if config['general']['mapper'] == "bwa":
             fai="reference/genome.fasta.fai",
             reference="reference/genome.fasta"
         output:
+            sam=temp("{sample}/{sample}.sam"),
+            bam=temp("{sample}/{sample}.bam"),
             sorted="{sample}/{sample}.sorted.bam"
         log:
             "{sample}/bwa/{sample}.log"
@@ -99,7 +103,7 @@ if config['general']['mapper'] == "bwa":
         container:
             config['apptainers']['bwa']
         shell:
-            manager.get_shell("bwa/align", "v1")
+            manager.get_shell("bwa/align", "v2")
 
 elif config['general']['mapper'] == 'bwa_split':
 
@@ -115,23 +119,36 @@ elif config['general']['mapper'] == 'bwa_split':
             seqkit split2 --by-size {params.nreads} -O {wildcards.sample}/split -1 {input[0]} -2 {input[1]}
             """
 
-    def get_bwa_input():
+    def _seqkit_stem(filename):
+        # seqkit split2 names parts <stem>.part_NNN.fastq.gz where <stem> is
+        # the input basename minus the fastq/fq[.gz] extension. Derive it from
+        # the real raw filenames so we do not assume a fixed readtag suffix.
+        base = os.path.basename(filename)
+        for ext in (".fastq.gz", ".fq.gz", ".fastq", ".fq"):
+            if base.endswith(ext):
+                return base[: -len(ext)]
+        return base
+
+    def get_bwa_input(wildcards):
+        files = manager.samples[wildcards.sample]
         if manager.paired is True:
             return (
-                    "{sample}/split/{sample}_R1_001.{splitid}.fastq.gz",
-                    "{sample}/split/{sample}_R2_001.{splitid}.fastq.gz"
+                    f"{wildcards.sample}/split/{_seqkit_stem(files[0])}.{wildcards.splitid}.fastq.gz",
+                    f"{wildcards.sample}/split/{_seqkit_stem(files[1])}.{wildcards.splitid}.fastq.gz"
                     )
         else:
-            return "{sample}/split/{sample}_R1_001.{splitid}.fastq.gz"
+            return f"{wildcards.sample}/split/{_seqkit_stem(files[0])}.{wildcards.splitid}.fastq.gz"
 
     # intermediate
     rule bwa_intermediate:
         input:
-            fastq=get_bwa_input(),
+            fastq=get_bwa_input,
             bwa_bwt="reference/genome.fasta.bwt",
             fai="reference/genome.fasta.fai",
             reference="reference/genome.fasta"
         output:
+            sam=temp("{sample}/split/{sample}.{splitid}.sam"),
+            bam=temp("{sample}/split/{sample}.{splitid}.bam"),
             sorted=temp("{sample}/split/{sample}.sorted.{splitid}.bam")
         log:
             "{sample}/split/{sample}.{splitid}.log"
@@ -144,7 +161,7 @@ elif config['general']['mapper'] == 'bwa_split':
         container:
             config['apptainers']['bwa']
         shell:
-            manager.get_shell("bwa/align", "v1")
+            manager.get_shell("bwa/align", "v2")
 
     def aggregate_bwa(wildcards):
         checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
@@ -254,6 +271,27 @@ rule filtering_bam:
         samtools view -b -F 4 {input.bam} > {output.bam}
         samtools index {output.bam}
         """
+
+
+if config["fastqc"]["do"]:
+    rule fastqc:
+        input:
+            manager.getrawdata()
+        output:
+            done="{sample}/fastqc/fastqc.done"
+        params:
+            options=config["fastqc"]["options"],
+            working_directory="{sample}/fastqc/"
+        threads:
+            config["fastqc"]["threads"]
+        log:
+            "{sample}/fastqc/fastqc.log"
+        resources:
+            **config["fastqc"]["resources"]
+        container:
+            config['apptainers']['fastqc']
+        shell:
+            manager.get_shell("fastqc/run", "v1")
 
 
 # sample should be included at the end of the filename for the multiqc to work
@@ -379,7 +417,7 @@ rule multiqc:
         options=config['multiqc']['options'],
         input_directory=config['multiqc']['input_directory'],
         config_file=config['multiqc']['config_file'],
-        modules=config['multiqc']['modules']
+        modules=config['multiqc']['modules'] + (" fastqc" if config["fastqc"]["do"] else "")
     log:
         "multiqc/multiqc.log"
     resources:
