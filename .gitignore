@@ -1,2 +1,6 @@
 .coverage
 __pycache__
+
+CLAUDE.md
+dist/
+test/data/measles.fa.fai
