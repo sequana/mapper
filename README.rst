@@ -137,6 +137,8 @@ Changelog
 ========= ======================================================================
 Version   Description
 ========= ======================================================================
+1.5.1     * fix bwa_split part discovery for any read tag (_R1_, _1., ...)
+            pass bam2bigwig options to bamCoverage
 1.5.0     * add optional FastQC on raw reads (--do-fastqc), included in MultiQC
 1.4.1     * update to use wrappers.shells and wrappers.snippets
             drop wrappers usage
