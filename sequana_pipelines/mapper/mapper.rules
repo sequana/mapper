@@ -165,8 +165,10 @@ elif config['general']['mapper'] == 'bwa_split':
 
     def aggregate_bwa(wildcards):
         checkpoint_output = checkpoints.split_fasta.get(**wildcards).output[0]
-        splitter = glob.glob(checkpoint_output+ "/*.gz")
-        splitter = [x.split('.')[-3] for x in splitter if x.endswith(".gz") and "_R1_" in x]
+        # parts of the first read file (works for any read tag: _R1_, _1., _R1.fastq.gz, ...)
+        stem = _seqkit_stem(manager.samples[wildcards.sample][0])
+        parts = glob.glob(f"{checkpoint_output}/{stem}.part_*.fastq.gz")
+        splitter = sorted(os.path.basename(x).split('.')[-3] for x in parts)
         filenames = expand("{{sample}}/split/{{sample}}.sorted.{splitid}.bam", splitid=splitter)
         return filenames
 
@@ -397,13 +399,15 @@ if config["general"]["create_bigwig"]:
             "{sample}/bigwig/{sample}.bw"
         log:
             "{sample}/bigwig/{sample}.log"
+        params:
+            options=config["bam2bigwig"]["options"]
         resources:
             **config["bam2bigwig"]["resources"]
         container:
             config['apptainers']['deeptools']
         shell:
             """
-            bamCoverage --bam {input} --outFileFormat bigwig --outFileName {output} > {log}
+            bamCoverage --bam {input} --outFileFormat bigwig --outFileName {output} {params.options} > {log}
             """
 
 # ========================================================== multiqc
